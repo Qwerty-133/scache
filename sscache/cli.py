@@ -24,7 +24,7 @@ CACHE_KEY = "storage.size"
     envvar="SPOTIFY_CACHE_SIZE",
     show_envvar=True,
 )
-def set_cache_size(file: str, size: int):
+def sscache(file: str, size: int):
     """
     Sets the cache size limit on the Spotify prefs file: FILE.
 
@@ -37,4 +37,4 @@ def set_cache_size(file: str, size: int):
 
 
 if __name__ == "__main__":
-    set_cache_size()
+    sscache()
