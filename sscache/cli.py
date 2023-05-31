@@ -1,6 +1,5 @@
 """A CLI tool to set the Spotify cache size threshold."""
 
-import dotenv
 import click
 
 # TODO: Inspect the behaviour of the Spotify client when the cache size is set to 0.
@@ -32,6 +31,8 @@ def sscache(file: str, size: int):
     FILE may also be specified through the SPOTIFY_PREFS_FILE environment
     variable.
     """
+    import dotenv
+
     dotenv.set_key(file, CACHE_KEY, str(size), quote_mode="never")
     click.echo(f"Updated cache size to {size}MB.")
 
