@@ -5,9 +5,10 @@ import click
 # TODO: Inspect the behaviour of the Spotify client when the cache size is set to 0.
 
 CACHE_KEY = "storage.size"
+CTX_SETTINGS = dict(help_option_names=["-h", "--help"])
 
 
-@click.command()
+@click.command(context_settings=CTX_SETTINGS)
 @click.argument(
     "file",
     type=click.Path(exists=True, dir_okay=False, readable=True, writable=True),
