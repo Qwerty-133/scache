@@ -2,10 +2,11 @@
 
 import click
 
-# TODO: Inspect the behaviour of the Spotify client when the cache size is set to 0.
+# TODO: Inspect the behaviour of the Spotify client when the cache size
+# is set to 0.
 
 CACHE_KEY = "storage.size"
-CTX_SETTINGS = dict(help_option_names=["-h", "--help"])
+CTX_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 
 @click.command(context_settings=CTX_SETTINGS)
@@ -25,13 +26,13 @@ CTX_SETTINGS = dict(help_option_names=["-h", "--help"])
     show_envvar=True,
 )
 @click.version_option(None, "--version", "-V", package_name=__package__)
-def sscache(file: str, size: int):
+def sscache(file: str, size: int) -> None:
     """
-    Sets the cache size limit on the Spotify prefs file: FILE.
+    Set the cache size limit on the Spotify prefs file: FILE.
 
     FILE is the path to the Spotify prefs file.
-    FILE may also be specified through the SPOTIFY_PREFS_FILE environment
-    variable.
+    FILE may also be specified through the SPOTIFY_PREFS_FILE
+    environment variable.
     """
     import dotenv
 
