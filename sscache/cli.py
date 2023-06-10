@@ -25,8 +25,18 @@ CTX_SETTINGS = {"help_option_names": ["-h", "--help"]}
     envvar="SPOTIFY_CACHE_SIZE",
     show_envvar=True,
 )
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    help="Ignore errors in the prefs file.",
+    show_default=True,
+    envvar="SPOTIFY_IGNORE_ERRORS",
+    show_envvar=True,
+)
 @click.version_option(None, "--version", "-V", package_name=__package__)
-def sscache(file: str, size: int) -> None:
+@click.pass_context
+def sscache(ctx: click.Context, file: str, size: int, force: bool) -> None:
     """
     Set the cache size limit on the Spotify prefs file: FILE.
 
@@ -34,10 +44,9 @@ def sscache(file: str, size: int) -> None:
     FILE may also be specified through the SPOTIFY_PREFS_FILE
     environment variable.
     """
-    import dotenv
+    from sscache import env
 
-    dotenv.set_key(file, CACHE_KEY, str(size), quote_mode="never")
-    click.echo(f"Updated cache size to {size}MB.")
+    env.set_cache_size(ctx, file, CACHE_KEY, str(size), quote_mode="never", force=force)
 
 
 if __name__ == "__main__":
