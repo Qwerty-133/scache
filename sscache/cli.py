@@ -59,10 +59,12 @@ def sscache(ctx: click.Context, file: t.Optional[str], size: int, force: bool, y
 
         file = detect.detect_prefs_file(ctx)
         if file is None:
-            ctx.fail(
+            click.echo(
                 "The Spotify prefs file couldn't be auto-detected."
-                "\nPlease specify a path to the prefs file using the --file option."
+                "\nPlease specify a path to the prefs file using the --file option.",
+                err=True,
             )
+            ctx.exit(2)
 
         if not yes:
             click.confirm(
