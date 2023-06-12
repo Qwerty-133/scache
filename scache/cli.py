@@ -40,7 +40,6 @@ CTX_SETTINGS = {"help_option_names": ["-h", "--help"]}
 )
 @click.option(
     "--force",
-    "-f",
     is_flag=True,
     help="Ignore syntax errors in the prefs file.",
     show_default=True,
@@ -83,7 +82,25 @@ def scache(ctx: click.Context, file: t.Optional[str], size: int, yes: bool, forc
 
     from scache import env
 
-    env.set_cache_size(ctx, file, CACHE_KEY, str(size), quote_mode="never", force=force)
+    try:
+        previous_value = env.set_key(
+            file, CACHE_KEY, str(size), quote_mode="never", ignore_errors=force
+        )
+    except env.InvalidLineError as e:
+        import textwrap
+
+        line_preview = textwrap.shorten(e.line_content.rstrip(), 80)
+        click.echo(
+            f"Line {e.line_no} is invalid. ({line_preview})"
+            "\nTo ignore this error, use the --force flag.",
+            err=True,
+        )
+        ctx.exit(3)
+
+    if previous_value is not None:
+        click.echo(f"The cache size has been updated from {previous_value} to {size} MB.")
+    else:
+        click.echo(f"The cache size has been set to {size} MB.")
 
 
 if __name__ == "__main__":

@@ -2,25 +2,36 @@
 
 import typing as t
 
-import click
 import dotenv.main
 
 
-def set_cache_size(
-    ctx: click.Context,
+class InvalidLineError(Exception):
+    """Raised when a line in a .env file is invalid."""
+
+    def __init__(self, line_no: int, line_content: str) -> None:
+        self.line_no = line_no
+        self.line_content = line_content
+
+
+def set_key(
     dotenv_path: dotenv.main.StrPath,
     key_to_set: str,
     value_to_set: str,
     quote_mode: t.Literal["always", "auto", "never"] = "always",
     export: bool = False,
     encoding: t.Optional[str] = "utf-8",
-    force: bool = False,
-) -> t.Tuple[t.Optional[bool], str, str]:
+    ignore_errors: bool = False,
+) -> t.Optional[str]:
     """
     Add or update a key/value pair in the given .env.
 
     If the .env path given doesn't exist, fails instead of risking creating
-    an orphan .env somewhere in the filesystem
+    an orphan .env somewhere in the filesystem.
+
+    If ignore_errors is True, invalid lines in the .env will be ignored.
+
+    Returns None if the key/value pair was added, or the previous value if
+    the key/value pair was updated.
     """
     if quote_mode not in ("always", "auto", "never"):
         raise ValueError(f"Unknown quote_mode: {quote_mode}")
@@ -29,25 +40,19 @@ def set_cache_size(
 
     value_out = "'{}'".format(value_to_set.replace("'", "\\'")) if quote else value_to_set
     line_out = f"export {key_to_set}={value_out}\n" if export else f"{key_to_set}={value_out}\n"
-    previous_cache_size = None
+    previous_value = None
 
     with dotenv.main.rewrite(dotenv_path, encoding=encoding) as (source, dest):
         replaced = False
         missing_newline = False
         for mapping in dotenv.main.parse_stream(source):
-            if not force and mapping.error:
-                import textwrap
-
-                line_preview = textwrap.shorten(mapping.original.string.rstrip(), 80)
-                ctx.fail(
-                    f"Line {mapping.original.line} is invalid. ({line_preview})"
-                    "\nTo ignore this error, use the --force flag."
-                )
+            if not ignore_errors:
+                raise InvalidLineError(mapping.original.line, mapping.original.string)
 
             if mapping.key == key_to_set:
                 dest.write(line_out)
                 replaced = True
-                previous_cache_size = mapping.value
+                previous_value = mapping.value
             else:
                 dest.write(mapping.original.string)
                 missing_newline = not mapping.original.string.endswith("\n")
@@ -56,9 +61,4 @@ def set_cache_size(
                 dest.write("\n")
             dest.write(line_out)
 
-    if replaced:
-        click.echo(f"Updated cache size to {value_to_set}MB. (Previously: {previous_cache_size})")
-    else:
-        click.echo(f"The cache size has been set to {value_to_set}MB.")
-
-    return True, key_to_set, value_to_set
+    return previous_value
