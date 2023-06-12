@@ -6,15 +6,17 @@ import typing as t
 
 import click
 
-WIN_PATHS = map(
-    pathlib.Path,
-    [
-        "~/AppData/Roaming/Spotify/prefs",
-    ],
-)
+win_str_paths = [
+    "~/AppData/Roaming/Spotify/prefs",
+]
+WIN_PATHS = [pathlib.Path(path).expanduser() for path in win_str_paths]
 
 
-UNIX_PATHS = []
+unix_str_paths = [
+    "~/.config/spotify/prefs",
+    "~/snap/spotify/current/.config/spotify/prefs",
+]
+UNIX_PATHS = [pathlib.Path(path).expanduser() for path in unix_str_paths]
 
 
 def ensure_file(path: pathlib.Path) -> bool:
@@ -35,7 +37,6 @@ def win_strategy() -> t.Optional[str]:
     Winget installations.
     """
     for path in WIN_PATHS:
-        path = path.expanduser()
         if ensure_file(path):
             return normalize_path(path)
 
@@ -59,7 +60,20 @@ def unix_strategy() -> t.Optional[str]:
         if ensure_file(path):
             return normalize_path(path)
 
-    return None
+    import subprocess
+
+    cmd = "find ~ | grep 'spotify/prefs' | head -n 1"
+    click.echo(f"Running: {cmd}")
+    try:
+        process = subprocess.run(
+            cmd, shell=True, check=True, capture_output=True, encoding="utf-8"  # noqa: S602
+        )
+    except subprocess.CalledProcessError:
+        return None
+    else:
+        path = pathlib.Path(process.stdout.strip())
+        if ensure_file(path):
+            return normalize_path(path)
 
 
 def detect_prefs_file(
