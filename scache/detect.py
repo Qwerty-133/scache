@@ -76,9 +76,7 @@ def unix_strategy() -> t.Optional[str]:
             return normalize_path(path)
 
 
-def detect_prefs_file(
-    ctx: click.Context,
-) -> t.Optional[str]:
+def detect_prefs_file() -> t.Optional[str]:
     """Return the path to the Spotify prefs file, if found."""
     if platform.system() == "Windows":
         return win_strategy()

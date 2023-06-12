@@ -57,7 +57,7 @@ def scache(ctx: click.Context, file: t.Optional[str], size: int, yes: bool, forc
     if file is None:
         from scache import detect
 
-        file = detect.detect_prefs_file(ctx)
+        file = detect.detect_prefs_file()
         if file is None:
             click.echo(
                 "The Spotify prefs file couldn't be auto-detected."
