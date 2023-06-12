@@ -15,9 +15,11 @@ CTX_SETTINGS = {"help_option_names": ["-h", "--help"]}
 @click.option(
     "--file",
     "-f",
+    default=None,
     help="Path to the Spotify prefs file.",
     type=click.Path(exists=True, dir_okay=False, readable=True, writable=True),
     envvar="SPOTIFY_PREFS_FILE",
+    show_envvar=True,
 )
 @click.option(
     "--size",
@@ -29,14 +31,6 @@ CTX_SETTINGS = {"help_option_names": ["-h", "--help"]}
     envvar="SPOTIFY_CACHE_SIZE",
 )
 @click.option(
-    "--force",
-    "-f",
-    is_flag=True,
-    help="Ignore errors in the prefs file.",
-    show_default=True,
-    envvar="SPOTIFY_IGNORE_ERRORS",
-)
-@click.option(
     "--yes",
     "-y",
     is_flag=True,
@@ -44,15 +38,21 @@ CTX_SETTINGS = {"help_option_names": ["-h", "--help"]}
     show_default=True,
     envvar="SPOTIFY_YES",
 )
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    help="Ignore syntax errors in the prefs file.",
+    show_default=True,
+    envvar="SPOTIFY_IGNORE_ERRORS",
+)
 @click.version_option(None, "--version", "-V", package_name=__package__)
 @click.pass_context
-def sscache(ctx: click.Context, file: t.Optional[str], size: int, force: bool, yes: bool) -> None:
+def sscache(ctx: click.Context, file: t.Optional[str], size: int, yes: bool, force: bool) -> None:
     """
-    Set the cache size limit on the Spotify prefs file: FILE.
+    Set the cache size limit on the Spotify prefs file.
 
-    FILE is the path to the Spotify prefs file.
-    FILE may also be specified through the SPOTIFY_PREFS_FILE
-    environment variable.
+    If a file is not specified, it will be auto-detected.
     """
     if file is None:
         from sscache import detect
