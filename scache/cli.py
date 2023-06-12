@@ -48,14 +48,14 @@ CTX_SETTINGS = {"help_option_names": ["-h", "--help"]}
 )
 @click.version_option(None, "--version", "-V", package_name=__package__)
 @click.pass_context
-def sscache(ctx: click.Context, file: t.Optional[str], size: int, yes: bool, force: bool) -> None:
+def scache(ctx: click.Context, file: t.Optional[str], size: int, yes: bool, force: bool) -> None:
     """
     Set the cache size limit on the Spotify prefs file.
 
     If a file is not specified, it will be auto-detected.
     """
     if file is None:
-        from sscache import detect
+        from scache import detect
 
         file = detect.detect_prefs_file(ctx)
         if file is None:
@@ -81,10 +81,10 @@ def sscache(ctx: click.Context, file: t.Optional[str], size: int, yes: bool, for
             err=True,
         )
 
-    from sscache import env
+    from scache import env
 
     env.set_cache_size(ctx, file, CACHE_KEY, str(size), quote_mode="never", force=force)
 
 
 if __name__ == "__main__":
-    sscache()
+    scache()

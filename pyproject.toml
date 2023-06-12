@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "sscache"
+name = "scache"
 version = "0.1.0"
 description = "Ensure Spotify's cache size doesn't exceed a specified threshold."
 authors = ["Qwerty-133 <74311372+Qwerty-133@users.noreply.github.com>"]
 readme = "README.md"
 license = "MIT"
-repository = "https://github.com/Qwerty-133/sscache"
+repository = "https://github.com/Qwerty-133/scache"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
@@ -35,7 +35,7 @@ click = "^8.1.3"
 python-dotenv = "^1.0.0"
 
 [tool.poetry.scripts]
-sscache = "sscache.cli:sscache"
+scache = "scache.cli:scache"
 
 [tool.poetry.group.dev.dependencies]
 taskipy = "^1.11.0"
