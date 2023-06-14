@@ -1,0 +1,63 @@
+name: Publish Executables
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    timeout-minutes: 20
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2019, ubuntu-20.04, macos-latest]
+        include:
+          - os: windows-2019
+            pathsep: ";"
+            asset_name: scache_windows.exe
+            executable_mime: "application/vnd.microsoft.portable-executable"
+          - os: ubuntu-20.04
+            pathsep: ":"
+            asset_name: scache_linux
+            executable_mime: "application/x-executable"
+          - os: macos-latest
+            pathsep: ":"
+            asset_name: scache_macos
+            executable_mime: "application/x-mach-binary"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup the Python Environment
+        uses: Qwerty-133/python-setup@v1
+        with:
+          python-version: 3.11
+          skip-pre-commit: true
+
+      - name: Build executable with PyInstaller
+        run: >
+          poetry run pyinstaller -F --name ${{ matrix.asset_name }} scache/__main__.py --copy-metadata scache
+
+      - name: Quickly test executable
+        run: |
+          ./dist/${{ matrix.asset_name }} --version
+          ./dist/${{ matrix.asset_name }} --file .gitattributes || [ $? -eq 3 ]
+
+      - name: Upload binary as release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: dist/${{ matrix.asset_name }}
+          asset_name: ${{ matrix.asset_name }}
+          asset_content_type: ${{ matrix.executable_mime }}

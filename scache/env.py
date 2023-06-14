@@ -1,6 +1,10 @@
 """Improvements to the parsing functionality of the dotenv module."""
 
+import os
+import shutil
+import tempfile
 import typing as t
+from contextlib import contextmanager
 
 import dotenv.main
 
@@ -11,6 +15,40 @@ class InvalidLineError(Exception):
     def __init__(self, line_no: int, line_content: str) -> None:
         self.line_no = line_no
         self.line_content = line_content
+
+
+@contextmanager
+def rewrite(
+    path: dotenv.main.StrPath,
+    encoding: t.Optional[str],
+) -> t.Iterator[t.Tuple[t.IO[str], t.IO[str]]]:
+    """Make changes to a file atomically."""
+    if not os.path.isfile(path):
+        with open(path, mode="w", encoding=encoding) as source:
+            pass
+
+    dest_file = tempfile.NamedTemporaryFile(mode="w", encoding=encoding, delete=False)
+
+    try:
+        source = open(path, encoding=encoding)  # noqa: SIM115
+    except BaseException:
+        dest_file.close()
+        os.unlink(dest_file.name)
+        raise
+
+    try:
+        yield (source, dest_file)
+    except BaseException:
+        failed = True
+    else:
+        failed = False
+    finally:
+        dest_file.close()
+        source.close()
+        if failed:
+            os.unlink(dest_file.name)
+        else:
+            shutil.move(dest_file.name, path)
 
 
 def set_key(
@@ -42,7 +80,7 @@ def set_key(
     line_out = f"export {key_to_set}={value_out}\n" if export else f"{key_to_set}={value_out}\n"
     previous_value = None
 
-    with dotenv.main.rewrite(dotenv_path, encoding=encoding) as (source, dest):
+    with rewrite(dotenv_path, encoding=encoding) as (source, dest):
         replaced = False
         missing_newline = False
         for mapping in dotenv.main.parse_stream(source):
