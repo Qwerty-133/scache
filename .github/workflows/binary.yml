@@ -23,15 +23,15 @@ jobs:
         include:
           - os: windows-2019
             pathsep: ";"
-            asset_name: scache_windows.exe
+            asset_name: spcache_windows.exe
             executable_mime: "application/vnd.microsoft.portable-executable"
           - os: ubuntu-20.04
             pathsep: ":"
-            asset_name: scache_linux
+            asset_name: spcache_linux
             executable_mime: "application/x-executable"
           - os: macos-latest
             pathsep: ":"
-            asset_name: scache_macos
+            asset_name: spcache_macos
             executable_mime: "application/x-mach-binary"
 
     steps:
@@ -45,7 +45,7 @@ jobs:
 
       - name: Build executable with PyInstaller
         run: >
-          poetry run pyinstaller -F --name ${{ matrix.asset_name }} scache/__main__.py --copy-metadata scache
+          poetry run pyinstaller -F --name ${{ matrix.asset_name }} spcache/__main__.py --copy-metadata spcache
 
       - name: Quickly test executable
         run: |
