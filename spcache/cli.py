@@ -11,7 +11,7 @@ CACHE_KEY = "storage.size"
 CTX_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 
-@click.command(context_settings=CTX_SETTINGS)
+@click.group(context_settings=CTX_SETTINGS, invoke_without_command=True)
 @click.option(
     "--file",
     "-f",
@@ -53,6 +53,9 @@ def spcache(ctx: click.Context, file: t.Optional[str], size: int, yes: bool, for
 
     If a file is not specified, it will be auto-detected.
     """
+    if ctx.invoked_subcommand is not None:
+        return
+
     if file is None:
         from spcache import detect
 
@@ -101,6 +104,20 @@ def spcache(ctx: click.Context, file: t.Optional[str], size: int, yes: bool, for
         click.echo(f"The cache size has been updated from {previous_value} to {size} MB.")
     else:
         click.echo(f"The cache size has been set to {size} MB.")
+
+
+@spcache.command()
+@click.pass_context
+def detect(ctx: click.Context) -> None:
+    """Auto-detect the Spotify prefs file."""
+    from spcache import detect
+
+    file = detect.detect_prefs_file()
+    if file is None:
+        click.echo("The Spotify prefs file couldn't be auto-detected.", err=True)
+        ctx.exit(2)
+
+    click.echo(file)
 
 
 if __name__ == "__main__":
