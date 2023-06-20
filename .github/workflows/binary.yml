@@ -50,7 +50,7 @@ jobs:
       - name: Quickly test executable
         run: |
           ./dist/${{ matrix.asset_name }} --version
-          ./dist/${{ matrix.asset_name }} --file .gitattributes || [ $? -eq 3 ]
+          ./dist/${{ matrix.asset_name }} set --file .gitattributes || [ $? -eq 3 ]
 
       - name: Upload binary as release asset
         uses: actions/upload-release-asset@v1
