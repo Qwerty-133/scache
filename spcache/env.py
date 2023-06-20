@@ -40,6 +40,7 @@ def rewrite(
         yield (source, dest_file)
     except BaseException:
         failed = True
+        raise
     else:
         failed = False
     finally:
