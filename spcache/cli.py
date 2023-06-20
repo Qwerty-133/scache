@@ -11,7 +11,12 @@ CACHE_KEY = "storage.size"
 CTX_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 
-@click.group(context_settings=CTX_SETTINGS, invoke_without_command=True)
+@click.group(context_settings=CTX_SETTINGS)
+def spcache() -> None:
+    """Set a limit on the Spotify cache size."""
+
+
+@spcache.command()
 @click.option(
     "--file",
     "-f",
@@ -47,7 +52,7 @@ CTX_SETTINGS = {"help_option_names": ["-h", "--help"]}
 )
 @click.version_option(None, "--version", "-V", package_name=__package__)
 @click.pass_context
-def spcache(ctx: click.Context, file: t.Optional[str], size: int, yes: bool, force: bool) -> None:
+def set(ctx: click.Context, file: t.Optional[str], size: int, yes: bool, force: bool) -> None:
     """
     Set the cache size limit on the Spotify prefs file.
 
