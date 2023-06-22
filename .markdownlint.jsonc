@@ -1,0 +1,17 @@
+{
+    "list-marker-space": {
+        "ul_multi": 3,
+        "ol_multi": 2
+    },
+    "line-length": {
+        "line_length": 120,
+        "code_blocks": false
+    },
+    "ul-indent": {
+        "indent": 4
+    },
+    "no-inline-html": false,
+    "no-duplicate-heading": {
+        "siblings_only": true
+    }
+}
