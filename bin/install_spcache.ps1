@@ -20,7 +20,7 @@
     License: MIT
 #>
 
-[CmdletBinding()] 
+[CmdletBinding()]
 param(
     [ValidatePattern("^((\d+\.\d+\.\d+)|(latest))$")]
     [Alias("V")]

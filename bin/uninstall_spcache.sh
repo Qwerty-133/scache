@@ -140,4 +140,4 @@ printf "\n"
 printf "To add spcache to your PATH, add the following line to your shell's configuration file:\n"
 print_info "export PATH=\"\$PATH:$APP_DIR\"\n"
 printf "Then, restart your shell or run ${CYAN}source ~/.bashrc${RESET} (or equivalent) to apply the changes.\n"
-printf "See 
+printf "See
