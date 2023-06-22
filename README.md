@@ -102,6 +102,23 @@ curl -sSL https://raw.githubusercontent.com/Qwerty-133/spcache/main/bin/install_
   bash -s - --version 0.1.0
 ```
 
+## Installing from PyPI
+
+spcache is also available on PyPI <https://pypi.org/project/spcache/>.
+If you have Python 3.8+ installed, you can install spcache using pip:
+
+-   On Windows:
+
+    1. Check your Python version with `py --version`
+    2. Run `py -m pip install spcache` to install spcache.
+    3. Use `py -m spcache` instead of `spcache`.
+
+-   On MacOS/Linux:
+
+    1. Check your Python version with `python3 --version`
+    2. Run `python3 -m pip install spcache` to install spcache.
+    3. Use `python3 -m spcache` if `spcache` doesn't work.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
