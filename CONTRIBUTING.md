@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-Feel free to open an issue if you have any questions or suggestions.  
+Feel free to open an issue if you have any questions or suggestions.\
 Directly creating a pull request is fine for small changes, but please open an issue before making any major changes.
 
 ## Setting up the Development Environment
@@ -21,7 +21,7 @@ Directly creating a pull request is fine for small changes, but please open an i
 1. Run `poetry run task precommit` to install pre-commit hooks.
 1. Run `pre-commit install` to install the pre-commit hooks.
 
-You can now make your changes!  
+You can now make your changes!\
 Run `poetry run spcache` to use the CLI, for example `poetry run spcache detect`.
 
 ## pre-commit
