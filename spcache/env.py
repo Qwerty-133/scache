@@ -21,7 +21,7 @@ class InvalidLineError(Exception):
 def rewrite(
     path: dotenv.main.StrPath,
     encoding: t.Optional[str],
-) -> t.Iterator[t.Tuple[t.IO[str], t.IO[str]]]:
+) -> t.Iterator[t.Tuple[t.TextIO, t.TextIO]]:
     """Make changes to a file atomically."""
     if not os.path.isfile(path):
         with open(path, mode="w", encoding=encoding) as source:
@@ -85,7 +85,7 @@ def set_key(
         replaced = False
         missing_newline = False
         for mapping in dotenv.main.parse_stream(source):
-            if not ignore_errors:
+            if not ignore_errors and mapping.error:
                 raise InvalidLineError(mapping.original.line, mapping.original.string)
 
             if mapping.key == key_to_set:
@@ -101,3 +101,25 @@ def set_key(
             dest.write(line_out)
 
     return previous_value
+
+
+def get_key(
+    dotenv_path: dotenv.main.StrPath,
+    key: str,
+    ignore_errors: bool = False,
+) -> t.Optional[str]:
+    """
+    Obtain a key's value from the given .env file.
+
+    If the key doesn't exist, None is returned.
+    If ignore_errors is True, invalid lines in the file will be ignored.
+    """
+    with open(dotenv_path) as stream:
+        for mapping in dotenv.main.parse_stream(stream):
+            if not ignore_errors and mapping.error:
+                raise InvalidLineError(mapping.original.line, mapping.original.string)
+
+            if mapping.key == key:
+                return mapping.value
+
+    return None
