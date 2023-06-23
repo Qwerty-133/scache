@@ -39,7 +39,7 @@ curl -sSL https://raw.githubusercontent.com/Qwerty-133/spcache/main/bin/install_
 
 ## Usage
 
--   Set the cache size to 1GB:
+-   Set the cache size limit to 1GB:
 
     ```bash
     spcache set --size 1000
@@ -53,11 +53,25 @@ curl -sSL https://raw.githubusercontent.com/Qwerty-133/spcache/main/bin/install_
     spcache set --size 1000 --file /path/to/prefs
     ```
 
+-   View the current cache size limit:
+
+    ```bash
+    spcache get
+    ```
+
 -   View more options:
 
     ```bash
     spcache --help
     ```
+
+## How It Works
+
+spcache works by changing the value of `storage.size` in your Spotify prefs file.
+
+> :warning: Changes are applied when the Spotify app is restarted.
+
+Spotify displays the current cache size inside the Storage section in the Settings page.
 
 ## Uninstallation
 
