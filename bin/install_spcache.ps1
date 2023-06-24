@@ -14,9 +14,9 @@
 
     install_spcache -V 1.0.0
 .LINK
-	https://github.com/Qwerty-133/spcache
+    https://github.com/Qwerty-133/spcache
 .NOTES
-	Author: Qwerty-133
+    Author: Qwerty-133
     License: MIT
 #>
 
