@@ -56,6 +56,7 @@ def handle_file(
 
 
 @click.group(context_settings=CTX_SETTINGS)
+@click.version_option(None, "--version", "-V", package_name=__package__)
 def spcache() -> None:
     """Set a limit on the Spotify cache size."""
 
@@ -99,7 +100,6 @@ force_option = click.option(
 )
 @yes_option
 @force_option
-@click.version_option(None, "--version", "-V", package_name=__package__)
 @click.pass_context
 def set(
     ctx: click.Context, file: t.Optional["dotenv.main.StrPath"], size: int, yes: bool, force: bool
