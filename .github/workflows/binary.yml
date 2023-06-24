@@ -42,6 +42,7 @@ jobs:
         with:
           python-version: 3.11
           skip-pre-commit: true
+          use-cache: false
 
       - name: Build executable with PyInstaller
         run: >
