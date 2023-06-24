@@ -8,11 +8,11 @@
     PATH.
 .PARAMETER Version
     The version of spcache to install. This can be a semantic version
-    (e.g. 0.1.0), or "latest" to install the latest version.
+    (e.g. 1.0.0), or "latest" to install the latest version.
 .EXAMPLE
     install_spcache
 
-    install_spcache -V 0.1.0
+    install_spcache -V 1.0.0
 .LINK
 	https://github.com/Qwerty-133/spcache
 .NOTES

@@ -104,7 +104,7 @@ Installing a specific version of spcache:
 $script = [scriptblock]::Create(
   (iwr -useb "https://raw.githubusercontent.com/Qwerty-133/spcache/main/bin/install_spcache.ps1").Content
 )
-& $script -Version 0.1.0
+& $script -Version 1.0.0
 ```
 
 ### MacOS/Linux
@@ -113,7 +113,7 @@ Installing a specific version of spcache:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/Qwerty-133/spcache/main/bin/install_spcache.sh |
-  bash -s - --version 0.1.0
+  bash -s - --version 1.0.0
 ```
 
 ## Installing from PyPI
