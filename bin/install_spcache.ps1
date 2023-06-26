@@ -77,7 +77,11 @@ if (-not ($CURRENT_PATH -contains $APP_DIR)) {
         $CURRENT_PATH -join ";",
         [EnvironmentVariableTarget]::User
     )
-    $env:PATH += ";${APP_DIR}"
+}
+
+if (-not ($env:PATH -contains $APP_DIR)) {
+    $env:PATH += ";$APP_DIR"
+    Write-Verbose "Added $APP_DIR to the current session's PATH."
 }
 
 Write-Host "Successfully installed spcache." -ForegroundColor Green
