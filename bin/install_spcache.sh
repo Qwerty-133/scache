@@ -20,20 +20,26 @@ else
     RESET=""
 fi
 
+readonly NOCOLOUR=""
 readonly RED
 readonly GREEN
 readonly CYAN
 readonly YELLOW
 readonly RESET
 
+
+# Print a message in the specified colour.
+# Arg1: The colour to print in. Arg2: The message to print.
 print() {
-    printf "${1}${2}${RESET}"
+    printf "%b" "${1}${2}${RESET}"
 }
 
+# Log the command and line number causing an error.
+# shellcheck disable=SC2317
 traphandler() {
     status=$?
     command="${BASH_COMMAND}"
-    ln="${BASH_LINENO}"
+    ln="${BASH_LINENO[0]}"
     print "${RED}" "An unexpected error occurred:\n"
     msg="Command: ${command}\nLine: ${ln}\nExit code: ${status}"
     print "${RED}" "${msg}\n"
@@ -55,6 +61,8 @@ EOM
 VERBOSE="0"
 VERSION="latest"
 
+# Print a message in yellow if verbose mode is enabled.
+# Arg: The message to print.
 print_verbose() {
     if [ "${VERBOSE}" = "1" ]; then
         print "${YELLOW}" "${1}"
@@ -72,7 +80,7 @@ while getopts ":v:dh" opt; do
         fi
         ;;
     h)
-        printf "${HELP}\n"
+        print "${NOCOLOUR}" "${HELP}\n"
         exit 0
         ;;
     d)
@@ -80,7 +88,7 @@ while getopts ":v:dh" opt; do
         ;;
     \?)
         print "${RED}" "Invalid option: -${OPTARG}\n"
-        printf "${HELP}\n"
+        print "${NOCOLOUR}" "${HELP}\n"
         exit 1
         ;;
     esac
@@ -91,9 +99,11 @@ readonly VERSION
 print_verbose "Using version: ${VERSION}, verbose: ${VERBOSE}\n"
 
 if [ -z "${XDG_DATA_HOME:-}" ]; then
+    # shellcheck disable=SC2016
     RAW_APP_DIR='${HOME}/.local/share/spcache'
     APP_DIR="${HOME}/.local/share/spcache"
 else
+    # shellcheck disable=SC2016
     RAW_APP_DIR='${XDG_DATA_HOME}/spcache'
     APP_DIR="${XDG_DATA_HOME}/spcache"
 fi
@@ -143,6 +153,8 @@ readonly EXPORT_LINE="export PATH=\"\$PATH:${RAW_APP_DIR}\""
 readonly ECHO_CMD="echo '${EXPORT_LINE}'"
 
 
+# Add the export line to the commands array if not present in the file.
+# Arg: The file to add the export line to.
 add_if_not_present() {
     # Redirect stderr to null incase the file doesn't exist.
     if ! grep -Fxq "${EXPORT_LINE}" "${1}" 2>/dev/null; then
@@ -192,11 +204,12 @@ ${YELLOW}Please restart your shell to start using spcache.${RESET}
 Or run ${YELLOW}exec \$SHELL${RESET}.
 EOM
 
+# If spcache isn't in the session PATH, tell them to restart their shell.
 handle_restart() {
     if [[ ! ":$PATH:" == *":${APP_DIR}:"* ]]; then
         print "${YELLOW}" "${RESTART_MSG}\n"
     else
-        printf "Run 'spcache set' to set the cache limit.\n"
+        print "${NOCOLOUR}" "Run 'spcache set' to set the cache limit.\n"
     fi
 }
 
@@ -205,14 +218,14 @@ if [ ${#commands[@]} -eq 0 ]; then
     exit 0
 fi
 
-printf "The following commands need to be run to add spcache to your PATH:\n"
+print "${NOCOLOUR}" "The following commands need to be run to add spcache to your PATH:\n"
 for cmd in "${commands[@]}"; do
-    printf "${cmd}\n"
+    print "${NOCOLOUR}" "${cmd}\n"
 done
 
 print "${YELLOW}" "Proceed? [y/N] "
 
-read yn
+read -r yn < /dev/tty
 yn=$(echo "${yn}" | tr '[:upper:]' '[:lower:]')
 
 case "${yn}" in

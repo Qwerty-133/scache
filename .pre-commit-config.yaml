@@ -3,11 +3,8 @@ repos:
     rev: v4.4.0
     hooks:
       - id: check-ast
-      - id: check-json
       - id: check-merge-conflict
       - id: end-of-file-fixer
-      - id: pretty-format-json
-        args: ['--indent=4', '--autofix', --no-sort-keys]
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
   - repo: https://github.com/pycqa/isort
@@ -28,8 +25,13 @@ repos:
   - repo: local
     hooks:
       - id: black
-        name: Black
+        name: black
         entry: poetry run black
         language: system
         types: [python]
         require_serial: true
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.5
+    hooks:
+      - id: shellcheck
+        name: shellcheck
