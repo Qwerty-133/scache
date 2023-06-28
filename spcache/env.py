@@ -1,6 +1,7 @@
 """Improvements to the parsing functionality of the dotenv module."""
 
 import os
+import pathlib
 import shutil
 import tempfile
 import typing as t
@@ -23,33 +24,21 @@ def rewrite(
     encoding: t.Optional[str],
 ) -> t.Iterator[t.Tuple[t.TextIO, t.TextIO]]:
     """Make changes to a file atomically."""
-    if not os.path.isfile(path):
-        with open(path, mode="w", encoding=encoding) as source:
-            pass
+    pathlib.Path(path).touch()
 
-    dest_file = tempfile.NamedTemporaryFile(mode="w", encoding=encoding, delete=False)
+    with tempfile.NamedTemporaryFile(mode="w", encoding=encoding, delete=False) as dest:
+        error = None
+        try:
+            with open(path, encoding=encoding) as source:
+                yield (source, dest)
+        except BaseException as err:
+            error = err
 
-    try:
-        source = open(path, encoding=encoding)  # noqa: SIM115
-    except BaseException:
-        dest_file.close()
-        os.unlink(dest_file.name)
-        raise
-
-    try:
-        yield (source, dest_file)
-    except BaseException:
-        failed = True
-        raise
+    if error is None:
+        shutil.move(dest.name, path)
     else:
-        failed = False
-    finally:
-        dest_file.close()
-        source.close()
-        if failed:
-            os.unlink(dest_file.name)
-        else:
-            shutil.move(dest_file.name, path)
+        os.unlink(dest.name)
+        raise error from None
 
 
 def set_key(
