@@ -26,5 +26,15 @@ jobs:
         with:
           python-version: 3.11
 
-      - name: Lint
-        run: poetry run task lint
+      - name: Run pre-commit hooks
+        run: poetry run pre-commit run --show-diff-on-failure --color=always --all-files
+
+      - name: Lint PowerShell files
+        shell: pwsh
+        run: |
+          $analyzerModule = Get-Module -ListAvailable -Name PSScriptAnalyzer
+          if ($null -eq $analyzerModule) {
+            Install-Module -Name PSScriptAnalyzer -Force
+          }
+
+          Invoke-ScriptAnalyzer -Path '.\' -Recurse -EnableExit
