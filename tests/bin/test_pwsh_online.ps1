@@ -6,10 +6,10 @@ Import-Module "./tests/bin/helpers/utils.psm1"
 $ErrorActionPreference = "Stop"
 
 $install_link = (
-    "https://raw.githubusercontent.com/Qwerty-133/spcache-temp/main/bin/install_spcache.sh"
+    "https://raw.githubusercontent.com/Qwerty-133/spcache/main/bin/install_spcache.ps1"
 )
 $uninstall_link = (
-    "https://raw.githubusercontent.com/Qwerty-133/spcache-temp/main/bin/uninstall_spcache.ps1"
+    "https://raw.githubusercontent.com/Qwerty-133/spcache/main/bin/uninstall_spcache.ps1"
 )
 
 Write-Green "Test a basic installation using invoke-expression"
@@ -26,7 +26,7 @@ $session_path = $env:PATH
 
 Write-Green "Test script-block installation of a specific version"
 $script = [scriptblock]::Create(
-    (Invoke-WebRequest -UseBasicParsing Headers $headers $install_link).Content
+    (Invoke-WebRequest -UseBasicParsing -Headers $headers $install_link).Content
 )
 & $script -Version 1.0.0
 Test-SpcacheVersion "1.0.0"
