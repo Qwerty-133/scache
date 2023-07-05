@@ -1,0 +1,30 @@
+name: Install fish and Zsh.
+description: Installs the fish and zsh shells.
+
+defaults:
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Install fish
+      uses: fish-actions/install-fish@v1.1.0
+
+    - name: Test fish installation
+      shell: bash
+      run: echo "Installed $(fish --version)"
+
+    - name: Install Zsh
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt-get install --yes zsh
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          brew install zsh
+        else
+          exit 1
+        fi
+
+    - name: Test Zsh installation
+      shell: bash
+      run: echo "Installed $(zsh --version)"

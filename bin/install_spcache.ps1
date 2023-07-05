@@ -6,6 +6,10 @@
 
     The pre-built binaries are downloaded from GitHub, and are added to the
     PATH.
+
+    If the GITHUB_TOKEN environment variable is set, it will be used to
+    authenticate with GitHub. This is useful if you are hitting the rate limit
+    for unauthenticated requests.
 .PARAMETER Version
     The version of spcache to install. This can be a semantic version
     (e.g. 1.0.0), or "latest" to install the latest version.
@@ -29,6 +33,16 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+
+$GITHUB_TOKEN = $env:GITHUB_TOKEN
+if ([string]::IsNullOrWhiteSpace($GITHUB_TOKEN)) {
+    Write-Verbose "No GitHub token found in environment variables."
+    $headers = @{ }
+}
+else {
+    $headers = @{ "Authorization" = "Bearer $GITHUB_TOKEN" }
+}
+
 $BASE_DIR = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
 $APP_DIR = "$BASE_DIR\spcache"
 
@@ -39,12 +53,13 @@ if (-not (Test-Path $APP_DIR)) {
 
 if ($Version -eq "latest") {
     $release_url = "https://api.github.com/repos/Qwerty-133/spcache/releases/latest"
-} else {
+}
+else {
     $release_url = "https://api.github.com/repos/Qwerty-133/spcache/releases/tags/v$Version"
 }
 
 Write-Verbose "Fetching release data from $release_url"
-$release_data = Invoke-RestMethod -UseBasicParsing $release_url
+$release_data = Invoke-RestMethod -UseBasicParsing $release_url -Headers $headers
 $actual_version = $release_data.tag_name
 
 $asset_url = (
@@ -58,29 +73,34 @@ if (-not $asset_url) {
 }
 
 Write-Host "Downloading spcache ($actual_version)..." -ForegroundColor Cyan
-Invoke-WebRequest -UseBasicParsing -Uri $asset_url -OutFile "$APP_DIR\spcache.exe"
+Invoke-WebRequest -UseBasicParsing -Uri $asset_url `
+-Headers $headers -OutFile "$APP_DIR\spcache.exe"
 
-$CURRENT_PATH = [Environment]::GetEnvironmentVariable(
+$PersistentPath = [Environment]::GetEnvironmentVariable(
     "PATH",
     [EnvironmentVariableTarget]::User
 )
-$CURRENT_PATH = $CURRENT_PATH -split ";" | Where-Object { $_ }
+$PersistentPath = $PersistentPath -split ";" | Where-Object { $_ }
 
-if (-not ($CURRENT_PATH -contains $APP_DIR)) {
+if (-not ($PersistentPath -contains $APP_DIR)) {
     Write-Host "Adding $APP_DIR to PATH..." -ForegroundColor Cyan
 
-    $CURRENT_PATH += $APP_DIR
-    $CURRENT_PATH += ""
+    $PersistentPath += $APP_DIR
+    $PersistentPath += ""
 
     [Environment]::SetEnvironmentVariable(
         "PATH",
-        $CURRENT_PATH -join ";",
+        $PersistentPath -join ";",
         [EnvironmentVariableTarget]::User
     )
 }
 
-if (-not ($env:PATH -contains $APP_DIR)) {
-    $env:PATH += ";$APP_DIR"
+$SessionPath = $env:PATH -split ";" | Where-Object { $_ }
+if (-not ($SessionPath -contains $APP_DIR)) {
+    $SessionPath += "$APP_DIR"
+    $SessionPath += ""
+
+    $env:PATH = $SessionPath -join ";"
     Write-Verbose "Added $APP_DIR to the current session's PATH."
 }
 

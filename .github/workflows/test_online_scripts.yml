@@ -1,0 +1,60 @@
+name: Test Installation Scripts (Online)
+
+on:
+  workflow_run:
+    workflows: [Publish Executables]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  test-pwsh:
+    timeout-minutes: 10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, windows-2019]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Test PowerShell scripts (Core)
+        shell: pwsh
+        run: ./tests/bin/test_pwsh_online.ps1
+
+      - name: Test PowerShell scripts (Desktop)
+        shell: powershell
+        run: ./tests/bin/test_pwsh_online.ps1
+
+  test-bash:
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-20.04, macos-12, macos-11]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install shells
+        uses: ./.github/actions/install-shells
+
+      - name: Test Bash scripts
+        env:
+          TERM: xterm-256color
+        run: ./tests/bin/test_bash_online.sh

@@ -6,19 +6,11 @@
 
 set -euo pipefail
 
-if command -v tput >/dev/null 2>&1; then
-    RED=$(tput setaf 9)
-    GREEN=$(tput setaf 10)
-    CYAN=$(tput setaf 12)
-    YELLOW=$(tput setaf 11)
-    RESET=$(tput sgr0)
-else
-    RED=""
-    GREEN=""
-    CYAN=""
-    YELLOW=""
-    RESET=""
-fi
+RED=$(tput setaf 9 || printf "")
+GREEN=$(tput setaf 10 || printf "")
+CYAN=$(tput setaf 12 || printf "")
+YELLOW=$(tput setaf 11 || printf "")
+RESET=$(tput sgr0 || printf "")
 
 readonly NOCOLOUR=""
 readonly RED
@@ -27,11 +19,11 @@ readonly CYAN
 readonly YELLOW
 readonly RESET
 
-
 # Print a message in the specified colour.
-# Arg1: The colour to print in. Arg2: The message to print.
 print() {
-    printf "%b" "${1}${2}${RESET}"
+    local -r colour="${1}"
+    local -r message="${2}"
+    printf "%b" "${colour}${message}${RESET}"
 }
 
 # Log the command and line number causing an error.
@@ -47,29 +39,39 @@ traphandler() {
 }
 trap traphandler ERR
 
+readonly prog_name="${0}"
+
 read -r -d '' HELP << EOM || true
-Usage: install_spcache [-v <version>] [-d]
+Usage: ${prog_name} [-v <version>] [-d]
 
   Installs spcache.
 
+  If the GITHUB_TOKEN environment variable is set, it will be used to
+  authenticate with GitHub. This is useful if you are hitting the rate limit
+  for unauthenticated requests.
+
 Options:
   -v  Specify a version to install. [Default: latest]
-  -d  Show verbose output.
+  -d  Enable verbose output.
+  -y  Execute commands required to add spcache to PATH without confirming.
+  -s  The shell to add spcache to PATH for. One of: bash, zsh, fish.
   -h  Show this help message and exit.
 EOM
 
 VERBOSE="0"
 VERSION="latest"
+YES="0"
+SHELL_ARG=$SHELL
 
 # Print a message in yellow if verbose mode is enabled.
-# Arg: The message to print.
 print_verbose() {
+    local -r message="${1}"
     if [ "${VERBOSE}" = "1" ]; then
-        print "${YELLOW}" "${1}"
+        print "${YELLOW}" "${message}"
     fi
 }
 
-while getopts ":v:dh" opt; do
+while getopts ":v:dys:h" opt; do
     case $opt in
     v)
         if [[ "${OPTARG}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -86,6 +88,17 @@ while getopts ":v:dh" opt; do
     d)
         VERBOSE="1"
         ;;
+    y)
+        YES="1"
+        ;;
+    s)
+        if [[ "${OPTARG}" =~ ^(.*/)?(bash|fish|zsh)$ ]]; then
+            SHELL_ARG="${OPTARG}"
+        else
+            print "${RED}" "Unsupported shell: ${OPTARG}\n"
+            exit 1
+        fi
+        ;;
     \?)
         print "${RED}" "Invalid option: -${OPTARG}\n"
         print "${NOCOLOUR}" "${HELP}\n"
@@ -96,15 +109,18 @@ done
 
 readonly VERBOSE
 readonly VERSION
+readonly YES
+readonly SHELL_ARG
+
 print_verbose "Using version: ${VERSION}, verbose: ${VERBOSE}\n"
 
 if [ -z "${XDG_DATA_HOME:-}" ]; then
     # shellcheck disable=SC2016
-    RAW_APP_DIR='${HOME}/.local/share/spcache'
+    RAW_APP_DIR='$HOME/.local/share/spcache'
     APP_DIR="${HOME}/.local/share/spcache"
 else
     # shellcheck disable=SC2016
-    RAW_APP_DIR='${XDG_DATA_HOME}/spcache'
+    RAW_APP_DIR='$XDG_DATA_HOME/spcache'
     APP_DIR="${XDG_DATA_HOME}/spcache"
 fi
 
@@ -113,7 +129,7 @@ readonly APP_DIR
 print_verbose "App Dir: ${APP_DIR}\n"
 
 if [ ! -d "${APP_DIR}" ]; then
-    mkdir -p "${APP_DIR}"
+    mkdir -p "${APP_DIR}" # --parents
     print_verbose "Created directory ${APP_DIR}\n"
 fi
 
@@ -123,9 +139,19 @@ else
     release_url="https://api.github.com/repos/Qwerty-133/spcache/releases/tags/v${VERSION}"
 fi
 print_verbose "Fetching release data from ${release_url}\n"
-release_data=$(curl -sL "${release_url}")
 
-version_tag=$(echo "${release_data}" | grep -oP '(?<="tag_name": ")[^"]*')
+if [ -n "${GITHUB_TOKEN:-}" ]; then
+    print_verbose "Using GitHub token for authentication\n"
+    HEADER="Authorization: Bearer ${GITHUB_TOKEN:-}"
+else
+    HEADER=""
+fi
+readonly HEADER
+
+release_data=$(curl --fail --silent --location "${release_url}" --header "${HEADER}")
+
+version_tag="${release_data#*\"tag_name\": \"}"
+version_tag="${version_tag%%\"*}"
 print_verbose "Version tag: ${version_tag}\n"
 
 if [ "$(uname)" = "Darwin" ]; then
@@ -137,28 +163,33 @@ else
     exit 2
 fi
 
-asset_url=$(echo "${release_data}" | grep -oP "(?<=\"browser_download_url\": \")[^\"]*${platform}")
+asset_url="https://github.com/Qwerty-133/spcache/releases/download/${version_tag}/spcache_${platform}"
 print_verbose "Asset url: ${asset_url}\n"
 
 print "${CYAN}" "Downloading spcache ${version_tag} for ${platform}...\n"
-curl -sL "${asset_url}" -o "${APP_DIR}/spcache"
+curl --fail --silent --location "${asset_url}" --output "${APP_DIR}/spcache" --header "${HEADER}"
+
 chmod +x "${APP_DIR}/spcache"
 
 print "${GREEN}" "Successfully installed spcache ${version_tag} to ${APP_DIR}\n\n"
 
 commands=()
 
-readonly EXPORT_LINE="export PATH=\"\$PATH:${RAW_APP_DIR}\""
-# Normalized: echo 'export PATH="$PATH:$HOME/path"'
+readonly EXPORT_LINE="export PATH=\"${RAW_APP_DIR}:\$PATH\""
+# Normalized: echo 'export PATH="$HOME/path:$PATH"'
 readonly ECHO_CMD="echo '${EXPORT_LINE}'"
 
 
 # Add the export line to the commands array if not present in the file.
-# Arg: The file to add the export line to.
 add_if_not_present() {
+    local -r file="${1}"
     # Redirect stderr to null incase the file doesn't exist.
-    if ! grep -Fxq "${EXPORT_LINE}" "${1}" 2>/dev/null; then
-        commands+=("${ECHO_CMD} >> ${1}")
+    # --fixed-strings --line-regexp --quiet
+    if ! grep -Fxq "${EXPORT_LINE}" "${file}" 2>/dev/null; then
+        if [[ $(tail -c 1 "${file}" 2>/dev/null) != $'\n' ]]; then
+            commands+=("echo >> ${file}")
+        fi
+        commands+=("${ECHO_CMD} >> ${file}")
     fi
 }
 
@@ -170,8 +201,8 @@ ${EXPORT_LINE}
 (or equivalent)
 EOM
 
-case $SHELL in
-*/bash)
+case "${SHELL_ARG}" in
+*bash)
     add_if_not_present "${HOME}/.bashrc"
     add_if_not_present "${HOME}/.profile"
     if [ -f "${HOME}/.bash_profile" ]; then
@@ -181,12 +212,13 @@ case $SHELL in
         add_if_not_present "${HOME}/.bash_login"
     fi
     ;;
-*/zsh)
+*zsh)
     add_if_not_present "${HOME}/.zshrc"
+    add_if_not_present "${HOME}/.zprofile"
     ;;
-*/fish)
-    if ! "${SHELL}" -c "contains \"${APP_DIR}\" \$fish_user_paths"; then
-        if "${SHELL}" -c "type -q fish_add_path"; then
+*fish)
+    if ! "${SHELL_ARG}" -c "contains \"${APP_DIR}\" \$fish_user_paths"; then
+        if "${SHELL_ARG}" -c "type -q fish_add_path"; then
             commands+=("fish -c 'fish_add_path \"${APP_DIR}\"'")
         else
             commands+=("fish -c 'set -U fish_user_paths \"${APP_DIR}\" \$fish_user_paths'")
@@ -223,16 +255,20 @@ for cmd in "${commands[@]}"; do
     print "${NOCOLOUR}" "${cmd}\n"
 done
 
-print "${YELLOW}" "Proceed? [y/N] "
 
-read -r yn < /dev/tty
-yn=$(echo "${yn}" | tr '[:upper:]' '[:lower:]')
+if [ "${YES}" = "1" ]; then
+    yn="y"
+else
+    print "${YELLOW}" "Proceed? [y/N] "
+    read -r yn < /dev/tty
+    yn=$(echo "${yn}" | tr '[:upper:]' '[:lower:]')
+fi
 
 case "${yn}" in
     "y" | "yes" | "true" | "t" | "on" | "1")
         for cmd in "${commands[@]}"; do
             if ! eval "${cmd}"; then
-                print "${RED}" "Failed to run: ${cmd}\nspcache couldn't be added to path.\n"
+                print "${RED}" "Failed to run: ${cmd}\nspcache couldn't be added to PATH.\n"
                 exit 1
             fi
         done

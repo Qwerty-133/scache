@@ -4,6 +4,7 @@ on:
   workflow_run:
     workflows: [Publish Executables]
     types: [completed]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -29,7 +30,6 @@ jobs:
           use-cache: false
 
       - name: Publish
-        run: >-
+        run: >
           poetry publish --build --no-interaction
-          --username __token__
-          --password ${{ secrets.PYPI_TOKEN }}
+          --username __token__ --password ${{ secrets.PYPI_TOKEN }}
