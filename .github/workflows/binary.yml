@@ -1,8 +1,9 @@
-name: Publish Executables
+name: Build Executables
 
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -19,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019, ubuntu-20.04, macos-latest]
+        os: [windows-2019, ubuntu-20.04, macos-11]
         include:
           - os: windows-2019
             pathsep: ";"
@@ -29,7 +30,7 @@ jobs:
             pathsep: ":"
             asset_name: spcache_linux
             executable_mime: "application/x-executable"
-          - os: macos-latest
+          - os: macos-11
             pathsep: ":"
             asset_name: spcache_macos
             executable_mime: "application/x-mach-binary"
@@ -54,6 +55,7 @@ jobs:
           ./dist/${{ matrix.asset_name }} set --file .gitattributes || [ $? -eq 3 ]
 
       - name: Upload binary as release asset
+        if: github.event_name == 'release'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

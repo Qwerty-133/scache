@@ -41,28 +41,42 @@ if (-not $NoConfirm) {
     }
 }
 
-$CURRENT_PATH = [Environment]::GetEnvironmentVariable(
+$PersistentPath = [Environment]::GetEnvironmentVariable(
     "PATH",
     [EnvironmentVariableTarget]::User
 )
-$CURRENT_PATH = $CURRENT_PATH -split ";" | Where-Object { $_ }
+$PersistentPath = $PersistentPath -split ";" | Where-Object { $_ }
 
-$CURRENT_SESSION_PATH = $env:PATH -split ";" | Where-Object {
+$SessionPath = $env:PATH -split ";" | Where-Object {
     $_ -and ($_ -ne $APP_DIR)
 }
-$env:PATH = $CURRENT_SESSION_PATH -join ";"
+$env:PATH = $SessionPath -join ";"
 
-if ($CURRENT_PATH -contains $APP_DIR) {
-    $CURRENT_PATH = $CURRENT_PATH | Where-Object { $_ -ne $APP_DIR }
-    $CURRENT_PATH += ""
+if ($PersistentPath -contains $APP_DIR) {
+    $PersistentPath = $PersistentPath | Where-Object { $_ -ne $APP_DIR }
+    $PersistentPath += ""
 
     [Environment]::SetEnvironmentVariable(
         "PATH",
-        $CURRENT_PATH -join ";",
+        $PersistentPath -join ";",
         [EnvironmentVariableTarget]::User
     )
     Write-Host "Removed $APP_DIR from PATH" -ForegroundColor Cyan
 }
 
-Remove-Item -Path $APP_DIR -Force -Recurse | Out-Null
-Write-Host "Successfully Uninstalled spcache." -ForegroundColor Green
+# From https://stackoverflow.com/a/9012108/14803382
+try {
+    Get-ChildItem -Path $APP_DIR -Recurse | Remove-Item -Force -Recurse
+} catch {
+    Write-Debug "Get-ChildItem pipe failed."
+}
+try {
+    Remove-Item $APP_DIR -Force -Recurse
+} catch {
+    Write-Debug "Remove-Item failed."
+}
+if (Test-Path $APP_DIR) {
+    Write-Error "Failed to delete $APP_DIR, please delete it manually."
+} else {
+    Write-Host "Successfully uninstalled spcache." -ForegroundColor Green
+}
