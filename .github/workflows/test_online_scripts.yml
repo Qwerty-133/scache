@@ -5,6 +5,8 @@ on:
     workflows: [Publish Executables]
     types: [completed]
   workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 0"
 
 permissions:
   contents: read
@@ -17,7 +19,7 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  test-pwsh:
+  test-pwsh-core:
     timeout-minutes: 10
 
     strategy:
@@ -30,11 +32,24 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Test PowerShell scripts (Core)
+      - name: Test PowerShell scripts
         shell: pwsh
         run: ./tests/bin/test_pwsh_online.ps1
 
-      - name: Test PowerShell scripts (Desktop)
+  test-powershell-desktop:
+    timeout-minutes: 10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, windows-2019]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Test PowerShell scripts
         shell: powershell
         run: ./tests/bin/test_pwsh_online.ps1
 
@@ -44,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-20.04, macos-12, macos-11]
+        os: [ubuntu-22.04, ubuntu-20.04, macos-13, macos-12, macos-11]
 
     runs-on: ${{ matrix.os }}
 
