@@ -37,13 +37,15 @@ traphandler() {
 }
 trap traphandler ERR
 
-if [[ "$(uname)" == 'Darwin' ]]; then
+os_name="$(uname)"
+if [[ "${os_name}" == 'Darwin' ]]; then
   readonly PLATFORM='macos'
-elif [[ "$(uname)" == 'Linux' ]]; then
+elif [[ "${os_name}" == 'Linux' ]]; then
   readonly PLATFORM='linux'
 else
-  print "${RED}" "Unsupported platform: $(uname)\n" 1>&2
-  exit 4
+  print "${YELLOW}"\
+  "Unrecognised platform: ${os_name}, the installed executable may not work\n" 1>&2
+  readonly PLATFORM='linux'
 fi
 readonly PROG_NAME="$0"
 
