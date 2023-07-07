@@ -79,4 +79,11 @@ print "${GREEN}" 'Test that the script fails on invalid shells\n'
 print "${GREEN}" 'Test that the script fails on invalid options\n'
 ! "${INSTALL}" -x 1>/dev/null 2>&1
 
+print "${GREEN}" 'Test that XDG_DATA_HOME is respected\n'
+# create a TEMPORARY directory, which is guaranteed to be unique
+dir="$(mktemp -d)"
+XDG_DATA_HOME="${dir}" "${INSTALL}" -y
+[[ -f "${dir}/spcache/spcache" ]]
+rm -rf "${dir}"
+
 print "${GREEN}" 'All tests passed!\n'
