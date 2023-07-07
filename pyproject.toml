@@ -86,7 +86,6 @@ line-length = 99
 
 [tool.taskipy.tasks]
 lint = "pre-commit run --all-files"
-precommit = "pre-commit install"
 
 [tool.isort]
 order_by_type = false

@@ -18,7 +18,7 @@ Directly creating a pull request is fine for small changes, but please open an i
 1. Fork the repository, and clone your forked repository.
 1. Make sure you are in the root project directory.
 1. Install the dependencies using `poetry install`.
-1. Run `poetry run task precommit` to install pre-commit hooks.
+1. Run `poetry run pre-commit install` to install pre-commit hooks.
 1. Run `pre-commit install` to install the pre-commit hooks.
 
 You can now make your changes!\
