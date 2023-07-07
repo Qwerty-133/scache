@@ -26,7 +26,7 @@ Run `poetry run spcache` to use the CLI, for example `poetry run spcache detect`
 
 ## pre-commit
 
-Whenever you make a commit, pre-commmit hooks will be run against your changed files. If any of them fail, update your
+Whenever you make a commit, pre-commit hooks will be run against your changed files. If any of them fail, update your
 code and try to commit again.
 
 ## Open a Pull Request
