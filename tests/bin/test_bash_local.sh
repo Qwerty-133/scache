@@ -33,7 +33,7 @@ print "${GREEN}" 'Test that spcache reads from same prefs file\n'
 bash --login -c 'spcache get --yes' | grep --silent 200
 
 print "${GREEN}" 'Test that installation fails on invalid versions\n'
-! "${INSTALL}" -s bash -v foobar 1>/dev/null 2>&1
+"${INSTALL}" -s bash -v foobar 1>/dev/null 2>&1 && exit 1
 
 print "${GREEN}" 'Test installation of a specific version\n'
 "${INSTALL}" -s bash -v "1.0.0" 1>/dev/null
@@ -74,10 +74,10 @@ print "${GREEN}" 'Test installation without specifying shell\n'
 "${INSTALL}" -y 1>/dev/null
 
 print "${GREEN}" 'Test that the script fails on invalid shells\n'
-! "${INSTALL}" -s invalid_shell 1>/dev/null 2>&1
+"${INSTALL}" -s invalid_shell 1>/dev/null 2>&1 && exit 1
 
 print "${GREEN}" 'Test that the script fails on invalid options\n'
-! "${INSTALL}" -x 1>/dev/null 2>&1
+"${INSTALL}" -x 1>/dev/null 2>&1 && exit 1
 
 print "${GREEN}" 'Test that XDG_DATA_HOME is respected\n'
 # create a TEMPORARY directory, which is guaranteed to be unique
