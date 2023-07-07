@@ -3,10 +3,10 @@
 
 . ./tests/bin/helpers/utils.sh
 
-link="https://raw.githubusercontent.com/Qwerty-133/spcache/main/bin/install_spcache.sh"
-bash_command="curl -sSL '${link}' --header '${HEADER}' | bash -s - -y 1>/dev/null"
-fish_command="curl -sSL '${link}' --header '${HEADER}' | bash -s - -y -s fish 1>/dev/null"
-zsh_command="curl -sSL '${link}' --header '${HEADER}' | bash -s - -y -s zsh 1>/dev/null"
+readonly LINK="https://raw.githubusercontent.com/Qwerty-133/spcache/main/bin/install_spcache.sh"
+bash_command="curl -sSL '${LINK}' --header '${HEADER}' | bash -s - -y 1>/dev/null"
+fish_command="curl -sSL '${LINK}' --header '${HEADER}' | bash -s - -y -s fish 1>/dev/null"
+zsh_command="curl -sSL '${LINK}' --header '${HEADER}' | bash -s - -y -s zsh 1>/dev/null"
 
 print "${GREEN}" "Test bash online installation\n"
 bash --login -c "${bash_command}"
