@@ -111,7 +111,8 @@ add_if_not_present() {
   # Redirect stderr to null incase the file doesn't exist.
   # --fixed-strings --line-regexp --quiet
   if ! grep -Fxq "${EXPORT_LINE}" "${file}" 2>/dev/null; then
-    if [[ "$(tail -c 1 "${file}" 2>/dev/null)" != '\n' ]]; then
+    # check whether the file ends on a new-line, if it exists
+    if (( $( (tail -c 1 "${file}" 2>/dev/null || echo) | wc -l) != 1 )); then
       commands+=("echo >> ${file}")
     fi
     commands+=("${ECHO_CMD} >> ${file}")

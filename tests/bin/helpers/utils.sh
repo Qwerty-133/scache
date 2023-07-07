@@ -85,8 +85,8 @@ get_file_contents() {
   contents=()
 
   case "${shell}" in
-    bash) files+=("${bash_files[@]}") ;;
-    zsh) files+=("${zsh_files[@]}") ;;
+    bash) files+=("${BASH_FILES[@]}") ;;
+    zsh) files+=("${ZSH_FILES[@]}") ;;
     *) throw "Invalid shell: ${shell}\n" ;;
   esac
 
@@ -121,7 +121,7 @@ test_spcache_in_path() {
 }
 
 if [[ -n "${GITHUB_TOKEN:-}" ]]; then
-  print_verbose 'Using GitHub token for authentication\n'
+  print "${GREEN}" 'Using GitHub token for authentication\n'
   readonly HEADER="Authorization: Bearer ${GITHUB_TOKEN}"
 else
   # shellcheck disable=SC2034
