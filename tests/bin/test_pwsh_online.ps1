@@ -5,8 +5,8 @@ param ()
 Import-Module "./tests/bin/helpers/utils.psm1"
 $ErrorActionPreference = "Stop"
 
-$install_link = "https://qwertie.pages.dev/bin/install_spcache.ps1"
-$uninstall_link = "https://qwertie.pages.dev/bin/uninstall_spcache.ps1"
+$install_link = "https://qwertie.pages.dev/install_spcache.ps1"
+$uninstall_link = "https://qwertie.pages.dev/uninstall_spcache.ps1"
 
 Write-Green "Test a basic installation using invoke-expression"
 Invoke-WebRequest -UseBasicParsing -Headers $headers $install_link | Invoke-Expression

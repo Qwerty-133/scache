@@ -27,14 +27,13 @@
 Paste the following and hit enter:
 
 ```powershell
-Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Qwerty-133/spcache/main/bin/install_spcache.ps1 |
-  Invoke-Expression
+Invoke-WebRequest -UseBasicParsing https://qwertie.pages.dev/install_spcache.ps1 | Invoke-Expression
 ```
 
 ### MacOS/Linux
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Qwerty-133/spcache/main/bin/install_spcache.sh | bash -s -
+curl -sSL https://qwertie.pages.dev/install_spcache.sh | bash -s -
 ```
 
 ## Usage
@@ -78,8 +77,7 @@ Spotify displays the current cache size inside the Storage section in the Settin
 ### Windows
 
 ```powershell
-Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Qwerty-133/spcache/main/bin/uninstall_spcache.ps1 |
-  Invoke-Expression
+Invoke-WebRequest -UseBasicParsing https://qwertie.pages.dev/uninstall_spcache.ps1 | Invoke-Expression
 ```
 
 This will remove the spcache files and remove spcache from your PATH.
@@ -101,9 +99,7 @@ rm -r "~/.local/share/spcache" || rm -r "${XDG_DATA_HOME}/spcache"
 Installing a specific version of spcache:
 
 ```powershell
-$script = [scriptblock]::Create(
-  (iwr -useb "https://raw.githubusercontent.com/Qwerty-133/spcache/main/bin/install_spcache.ps1").Content
-)
+$script = [scriptblock]::Create((iwr -useb "https://qwertie.pages.dev/install_spcache.ps1").Content)
 & $script -Version 1.0.0
 ```
 
@@ -112,8 +108,7 @@ $script = [scriptblock]::Create(
 Installing a specific version of spcache:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Qwerty-133/spcache/main/bin/install_spcache.sh |
-  bash -s - --version 1.0.0
+curl -sSL https://qwertie.pages.dev/install_spcache.sh | bash -s - --version 1.0.0
 ```
 
 ## Installing from PyPI

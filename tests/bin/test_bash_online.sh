@@ -3,7 +3,7 @@
 
 . ./tests/bin/helpers/utils.sh
 
-readonly LINK="https://qwertie.pages.dev/bin/install_spcache.sh"
+readonly LINK="https://qwertie.pages.dev/install_spcache.sh"
 bash_command="curl -sSL '${LINK}' --header '${HEADER}' | bash -s - -y -s bash 1>/dev/null"
 fish_command="curl -sSL '${LINK}' --header '${HEADER}' | bash -s - -y -s fish 1>/dev/null"
 zsh_command="curl -sSL '${LINK}' --header '${HEADER}' | bash -s - -y -s zsh 1>/dev/null"
