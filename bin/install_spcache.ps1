@@ -23,30 +23,26 @@
     Author: Qwerty-133
     License: MIT
 #>
-
 [CmdletBinding()]
 param(
     [ValidatePattern("^((\d+\.\d+\.\d+)|(latest))$")]
     [Alias("V")]
     [string]$Version = "latest"
 )
-
 $ErrorActionPreference = "Stop"
 
-
-$GITHUB_TOKEN = $env:GITHUB_TOKEN
-if ([string]::IsNullOrWhiteSpace($GITHUB_TOKEN)) {
-    Write-Verbose "No GitHub token found in environment variables."
+if ([string]::IsNullOrWhiteSpace($env:GITHUB_TOKEN)) {
     $headers = @{ }
 }
 else {
-    $headers = @{ "Authorization" = "Bearer $GITHUB_TOKEN" }
+    Write-Verbose "Using GitHub token for authentication"
+    $headers = @{ "Authorization" = "Bearer $env:GITHUB_TOKEN" }
 }
 
 $BASE_DIR = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
 $APP_DIR = "$BASE_DIR\spcache"
-
-if (-not (Test-Path $APP_DIR)) {
+$ZIP = "$APP_DIR\spcache_dist.zip"
+if (-not (Test-Path -LiteralPath $APP_DIR)) {
     New-Item -Path $APP_DIR -ItemType Directory | Out-Null
     Write-Verbose "Created directory $APP_DIR"
 }
@@ -61,20 +57,21 @@ else {
 Write-Verbose "Fetching release data from $release_url"
 $release_data = Invoke-RestMethod -UseBasicParsing $release_url -Headers $headers
 $actual_version = $release_data.tag_name
-
 $asset_url = (
     $release_data.assets |
-    Where-Object { $_.name -eq "spcache_windows.exe" } |
+    Where-Object { $_.name -eq "spcache_windows.zip" } |
     Select-Object -ExpandProperty browser_download_url
 )
-
 if (-not $asset_url) {
     Write-Error "Could not find a Windows release asset for version $actual_version."
 }
 
 Write-Host "Downloading spcache ($actual_version)..." -ForegroundColor Cyan
 Invoke-WebRequest -UseBasicParsing -Uri $asset_url `
--Headers $headers -OutFile "$APP_DIR\spcache.exe"
+-Headers $headers -OutFile $ZIP
+Write-Host "Extracting spcache files..." -ForegroundColor Cyan
+Expand-Archive -LiteralPath $ZIP -DestinationPath $APP_DIR -Force
+Remove-Item -LiteralPath $ZIP -Force
 
 $PersistentPath = [Environment]::GetEnvironmentVariable(
     "PATH",
@@ -84,22 +81,18 @@ $PersistentPath = $PersistentPath -split ";" | Where-Object { $_ }
 
 if (-not ($PersistentPath -contains $APP_DIR)) {
     Write-Host "Adding $APP_DIR to PATH..." -ForegroundColor Cyan
-
     $PersistentPath += $APP_DIR
     $PersistentPath += ""
-
     [Environment]::SetEnvironmentVariable(
         "PATH",
         $PersistentPath -join ";",
         [EnvironmentVariableTarget]::User
     )
 }
-
 $SessionPath = $env:PATH -split ";" | Where-Object { $_ }
 if (-not ($SessionPath -contains $APP_DIR)) {
     $SessionPath += "$APP_DIR"
     $SessionPath += ""
-
     $env:PATH = $SessionPath -join ";"
     Write-Verbose "Added $APP_DIR to the current session's PATH."
 }

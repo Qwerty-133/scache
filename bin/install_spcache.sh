@@ -58,6 +58,7 @@ else
   readonly RAW_APP_DIR='${HOME}/.local/share/spcache'
   readonly APP_DIR="${HOME}/.local/share/spcache"
 fi
+readonly ZIP="${APP_DIR}/spcache_dist.zip"
 readonly EXPORT_LINE="export PATH=\"${RAW_APP_DIR}:\${PATH}\""
 readonly ECHO_CMD="echo '${EXPORT_LINE}'" # Normalized: echo 'export PATH="${HOME}/path:${PATH}"'
 
@@ -188,11 +189,14 @@ version_tag="${release_data#*\"tag_name\": \"}"
 version_tag="${version_tag%%\"*}"
 print_verbose "Version tag: ${version_tag}\n"
 
-asset_url="https://github.com/Qwerty-133/spcache/releases/download/${version_tag}/spcache_${PLATFORM}"
+asset_url="https://github.com/Qwerty-133/spcache/releases/download/${version_tag}/spcache_${PLATFORM}.zip"
 print_verbose "Asset url: ${asset_url}\n"
 print "${CYAN}" "Downloading spcache ${version_tag} for ${PLATFORM}...\n"
-curl --fail --silent --location "${asset_url}" --output "${APP_DIR}/spcache" --header "${header}"
-chmod +x "${APP_DIR}/spcache"
+curl --fail --silent --location "${asset_url}" --output "${ZIP}" --header "${header}"
+print "${CYAN}" "Extracting spcache files...\n"
+unzip -o -q "${ZIP}" -d "${APP_DIR}" # overwrite, quiet, location
+rm "${ZIP}"
+chmod +x "${APP_DIR}/spcache" # Shouldn't be necessary, but just in case.
 print "${GREEN}" "Successfully installed spcache ${version_tag} to ${APP_DIR}\n\n"
 
 commands=()

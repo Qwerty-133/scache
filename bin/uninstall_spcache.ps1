@@ -26,8 +26,7 @@ $ErrorActionPreference = "Stop"
 
 $BASE_DIR = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
 $APP_DIR = "$BASE_DIR\spcache"
-
-if (-not (Test-Path $APP_DIR)) {
+if (-not (Test-Path -LiteralPath $APP_DIR)) {
     Write-Warning "spcache is not currently installed."
     return
 }
@@ -46,7 +45,6 @@ $PersistentPath = [Environment]::GetEnvironmentVariable(
     [EnvironmentVariableTarget]::User
 )
 $PersistentPath = $PersistentPath -split ";" | Where-Object { $_ }
-
 $SessionPath = $env:PATH -split ";" | Where-Object {
     $_ -and ($_ -ne $APP_DIR)
 }
@@ -66,16 +64,18 @@ if ($PersistentPath -contains $APP_DIR) {
 
 # From https://stackoverflow.com/a/9012108/14803382
 try {
-    Get-ChildItem -Path $APP_DIR -Recurse | Remove-Item -Force -Recurse
+    Get-ChildItem -LiteralPath $APP_DIR -Recurse | ForEach-Object {
+        Remove-Item -LiteralPath $_.FullName -Force -Recurse
+    }
 } catch {
     Write-Debug "Get-ChildItem pipe failed."
 }
 try {
-    Remove-Item $APP_DIR -Force -Recurse
+    Remove-Item -LiteralPath $APP_DIR -Force -Recurse
 } catch {
     Write-Debug "Remove-Item failed."
 }
-if (Test-Path $APP_DIR) {
+if (Test-Path -LiteralPath $APP_DIR) {
     Write-Error "Failed to delete $APP_DIR, please delete it manually."
 } else {
     Write-Host "Successfully uninstalled spcache." -ForegroundColor Green
