@@ -108,7 +108,7 @@ $script = [scriptblock]::Create((iwr -useb "https://qwertie.pages.dev/install_sp
 Installing a specific version of spcache:
 
 ```bash
-curl -sSL https://qwertie.pages.dev/install_spcache.sh | bash -s - --version 1.0.0
+curl -sSL https://qwertie.pages.dev/install_spcache.sh | bash -s - -v 1.0.0
 ```
 
 ## Installing from PyPI
