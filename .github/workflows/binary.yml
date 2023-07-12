@@ -4,6 +4,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag for the release to upload the assets to'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -21,22 +26,65 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-2019, ubuntu-20.04, macos-11]
+        mode: [onefile, onedir]
         include:
+          - mode: onedir
+            executable: spcache
+            mime: "application/zip"
+
           - os: windows-2019
-            pathsep: ";"
-            asset_name: spcache_windows.exe
-            executable_mime: "application/vnd.microsoft.portable-executable"
+            mode: onedir
+            asset: spcache_windows.zip
           - os: ubuntu-20.04
-            pathsep: ":"
-            asset_name: spcache_linux
-            executable_mime: "application/x-executable"
+            mode: onedir
+            asset: spcache_linux.zip
           - os: macos-11
-            pathsep: ":"
-            asset_name: spcache_macos
-            executable_mime: "application/x-mach-binary"
+            mode: onedir
+            asset: spcache_macos.zip
+
+          - os: windows-2019
+            mode: onefile
+            executable: spcache_windows.exe
+            asset: spcache_windows.exe
+            mime: "application/vnd.microsoft.portable-executable"
+          - os: ubuntu-20.04
+            mode: onefile
+            executable: spcache_linux
+            asset: spcache_linux
+            mime: "application/x-executable"
+          - os: macos-11
+            mode: onefile
+            executable: spcache_macos
+            asset: spcache_macos
+            mime: "application/x-mach-binary"
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Obtain release upload url
+        id: obtain-upload
+        run: |
+          if [[ -n '${{ github.event.release.upload_url }}' ]]; then
+            echo "Using upload_url from release event"
+            echo 'upload_url=${{ github.event.release.upload_url }}' >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          if [[ -z '${{ github.event.inputs.tag }}' ]]; then
+            echo "No tag specified, skipping"
+            exit 0
+          fi
+
+          tag='${{ github.event.inputs.tag }}'
+          url="https://api.github.com/repos/${{ github.repository }}/releases/tags/${tag}"
+          echo "Fetching upload url from ${url}"
+          header='Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}'
+          json="$(curl --silent "${url}" --header "${header}")"
+          upload_url="$(jq -r '.upload_url' <<< "${json}")"
+          echo "upload_url=${upload_url}" >> $GITHUB_OUTPUT
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          # This ref would be empty (default behaviour) when a tag hasn't been passed
+          ref: ${{ github.event.inputs.tag }}
 
       - name: Setup the Python Environment
         uses: Qwerty-133/python-setup@v1
@@ -45,22 +93,48 @@ jobs:
           skip-pre-commit: true
           use-cache: false
 
-      - name: Build executable with PyInstaller
-        run: >
-          poetry run pyinstaller -F --name ${{ matrix.asset_name }} spcache/__main__.py --copy-metadata spcache
+      - name: Build with PyInstaller
+        run: |
+          extra_options=()
+          if [[ '${{ matrix.mode }}' == 'onefile' ]]; then
+            extra_options+=(--onefile)
+          else
+            extra_options+=(--onedir)
+          fi
+
+          poetry run pyinstaller spcache/__main__.py \
+          --name '${{ matrix.executable }}' \
+          --copy-metadata spcache \
+          "${extra_options[@]}"
+
+          if [[ '${{ matrix.mode }}' == 'onedir' ]]; then
+            mv ./dist/spcache ./temp
+            rm -rf ./dist
+            mv ./temp ./dist
+          fi
 
       - name: Quickly test executable
         run: |
-          ./dist/${{ matrix.asset_name }} --version
-          ./dist/${{ matrix.asset_name }} set --file .gitattributes || [ $? -eq 3 ]
+          './dist/${{ matrix.executable }}' --version
+          ret=0
+          './dist/${{ matrix.executable }}' set --file .gitattributes || ret=$?
+          (( ret == 3 ))
 
-      - name: Upload binary as release asset
-        if: github.event_name == 'release'
+      - name: Prepare asset
+        run: |
+          if [[ '${{ matrix.mode }}' == 'onefile' ]]; then
+            mv './dist/${{ matrix.executable }}' './${{ matrix.asset }}'
+          else
+            7z a './${{ matrix.asset }}' './dist/*'
+          fi
+
+      - name: Upload release asset
+        if: ${{ steps.obtain-upload.outputs.upload_url }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: dist/${{ matrix.asset_name }}
-          asset_name: ${{ matrix.asset_name }}
-          asset_content_type: ${{ matrix.executable_mime }}
+          upload_url: ${{ steps.obtain-upload.outputs.upload_url }}
+          asset_path: ${{ matrix.asset }}
+          asset_name: ${{ matrix.asset }}
+          asset_content_type: ${{ matrix.mime }}
