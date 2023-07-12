@@ -67,8 +67,7 @@ if (-not $asset_url) {
 }
 
 Write-Host "Downloading spcache ($actual_version)..." -ForegroundColor Cyan
-Invoke-WebRequest -UseBasicParsing -Uri $asset_url `
--Headers $headers -OutFile $ZIP
+Invoke-WebRequest -UseBasicParsing -Uri $asset_url -Headers $headers -OutFile $ZIP
 Write-Host "Extracting spcache files..." -ForegroundColor Cyan
 Expand-Archive -LiteralPath $ZIP -DestinationPath $APP_DIR -Force
 Remove-Item -LiteralPath $ZIP -Force
