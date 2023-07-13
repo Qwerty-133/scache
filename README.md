@@ -36,6 +36,8 @@ Invoke-WebRequest -UseBasicParsing https://qwertie.pages.dev/install_spcache.ps1
 curl -sSL https://qwertie.pages.dev/install_spcache.sh | bash -s -
 ```
 
+> If the above script fails, please install spcache using Python. See [Installing From PyPI](#installing-from-pypi).
+
 ## Usage
 
 -   Set the cache size limit to 1GB:
@@ -70,6 +72,13 @@ spcache works by changing the value of `storage.size` in your Spotify prefs file
 
 > :warning: Changes are applied when the Spotify app is restarted.
 
+To restart Spotify:
+
+- On Windows, right-click the Spotify icon in the system tray and click "Quit".
+- On MacOS, right-click the Spotify icon in the dock and click "Quit".
+
+Then open Spotify again.
+
 Spotify displays the current cache size inside the Storage section in the Settings page.
 
 ## Uninstallation
@@ -87,7 +96,7 @@ This will remove the spcache files and remove spcache from your PATH.
 spcache is installed in `~/.local/share/spcache`, unless `$XDG_DATA_HOME` is set.
 
 ```bash
-rm -r "~/.local/share/spcache" || rm -r "${XDG_DATA_HOME}/spcache"
+rm -r ~/.local/share/spcache || rm -r "${XDG_DATA_HOME}/spcache"
 ```
 
 ## Installing a Specific Version
@@ -127,6 +136,8 @@ If you have Python 3.8+ installed, you can install spcache using pip:
     1. Check your Python version with `python3 --version`
     2. Run `python3 -m pip install spcache` to install spcache.
     3. Use `python3 -m spcache` if `spcache` doesn't work.
+
+To install a specific version of spcache, use `pip install spcache==1.0.0` instead.
 
 ## Contributing
 
