@@ -72,6 +72,20 @@ Write-Host "Extracting spcache files..." -ForegroundColor Cyan
 Expand-Archive -LiteralPath $ZIP -DestinationPath $APP_DIR -Force
 Remove-Item -LiteralPath $ZIP -Force
 
+Write-Verbose "Testing spcache"
+cmd /c "$APP_DIR\spcache.exe" --version 1>$null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host -ForegroundColor Red (
+        "The installed spcache executable is corrupt, or unsupported on this system."
+    )
+    Write-Host -ForegroundColor Yellow (
+        "Please install spcache from PyPI instead, see" +
+        " https://github.com/Qwerty-133/spcache#installing-from-pypi"
+    )
+    Write-Error "Failed to install spcache."
+}
+
+
 $PersistentPath = [Environment]::GetEnvironmentVariable(
     "PATH",
     [EnvironmentVariableTarget]::User
