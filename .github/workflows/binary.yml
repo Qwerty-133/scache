@@ -105,6 +105,7 @@ jobs:
           poetry run pyinstaller spcache/__main__.py \
           --name '${{ matrix.executable }}' \
           --copy-metadata spcache \
+          --target-architecture universal2 \
           "${extra_options[@]}"
 
           if [[ '${{ matrix.mode }}' == 'onedir' ]]; then
