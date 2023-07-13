@@ -85,8 +85,7 @@ Options:
 EOM
 
 read -r -d '' RESTART_MSG <<EOM || true
-${YELLOW}Please restart your shell to start using spcache.${RESET}
-Or run ${YELLOW}exec "\${SHELL}"${RESET}.
+${YELLOW}Please restart your shell${RESET} before using spcache, or run ${YELLOW}exec \$SHELL${RESET}
 EOM
 
 read -r -d '' UNRECOGNISED_SHELL_MSG <<EOM || true
@@ -234,7 +233,7 @@ case "${shell}" in
     fi
     ;;
   *)
-    print "${YELLOW}" "${UNRECOGNISED_SHELL_MSG}\n"
+    print "${NOCOLOUR}" "${UNRECOGNISED_SHELL_MSG}\n"
     exit 0
     ;;
 esac
