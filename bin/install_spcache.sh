@@ -123,7 +123,7 @@ add_if_not_present() {
 # If spcache isn't present in the session PATH, ask users to restart their shell.
 handle_restart() {
   if [[ ":$PATH:" != *":${APP_DIR}:"* ]]; then
-    print "${YELLOW}" "${RESTART_MSG}\n"
+    print "${NOCOLOUR}" "${RESTART_MSG}\n"
   else
     print "${NOCOLOUR}" "Run 'spcache set' to set the cache limit.\n"
   fi
@@ -135,7 +135,8 @@ while getopts ':v:dys:h' opt; do
       if [[ "${OPTARG}" =~ ^([0-9]+\.[0-9]+\.[0-9]+|latest)$ ]]; then
         version="${OPTARG}"
       else
-        print "${RED}" "Invalid version: ${OPTARG}\nSupply a version in the form of X.Y.Z\n" 1>&2
+        print "${RED}" "Invalid version: ${OPTARG}\n" 1>&2
+        print "${NOCOLOUR}" "Supply a version in the form of X.Y.Z\n" 1>&2
         exit 2
       fi
       ;;
@@ -197,6 +198,14 @@ print "${CYAN}" "Extracting spcache files...\n"
 unzip -o -q "${ZIP}" -d "${APP_DIR}" # overwrite, quiet, location
 rm "${ZIP}"
 chmod +x "${APP_DIR}/spcache" # Shouldn't be necessary, but just in case.
+
+if ! "${APP_DIR}/spcache" --version >/dev/null; then
+  print "${RED}" "The installed spcache executable is corrupt, or unsupported on this system.\n" 1>&2
+  print "${YELLOW}" "Please install spcache from PyPI instead, see " 1>&2
+  print "${YELLOW}" "https://github.com/Qwerty-133/spcache#installing-from-pypi\n" 1>&2
+  exit 4
+fi
+
 print "${GREEN}" "Successfully installed spcache ${version_tag} to ${APP_DIR}\n\n"
 
 commands=()
