@@ -273,6 +273,7 @@ case "${yn}" in
     ;;
   *)
     print "${YELLOW}" "spcache hasn't been added to PATH.\n"
+    print "${YELLOW}" "Please run the above commands manually to add spcache to PATH.\n"
     exit 0
     ;;
 esac
