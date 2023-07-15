@@ -39,13 +39,54 @@ else {
     $headers = @{ "Authorization" = "Bearer $env:GITHUB_TOKEN" }
 }
 
+
+function Remove-Path {
+    <#
+    .SYNOPSIS
+        Remove the file/directory present at the supplied path.
+    .PARAMETER Path
+        The path to remove.
+    .LINK
+        https://stackoverflow.com/a/9012108/14803382
+    #>
+    [
+        Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+            "PSUseShouldProcessForStateChangingFunctions", ""
+        )
+    ]
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$LiteralPath
+    )
+    try {
+        Get-ChildItem -LiteralPath $LiteralPath -Recurse | ForEach-Object {
+            Remove-Item -LiteralPath $_.FullName -Force -Recurse
+        }
+    } catch {
+        Write-Verbose "Get-ChildItem pipe failed."
+    }
+    try {
+        Remove-Item -LiteralPath $LiteralPath -Force -Recurse
+    } catch {
+        Write-Verbose "Remove-Item failed."
+    }
+    if (Test-Path -LiteralPath $LiteralPath) {
+        Write-Error "Failed to remove $LiteralPath"
+    }
+}
+
+
 $BASE_DIR = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
 $APP_DIR = "$BASE_DIR\spcache"
 $ZIP = "$APP_DIR\spcache_dist.zip"
-if (-not (Test-Path -LiteralPath $APP_DIR)) {
-    New-Item -Path $APP_DIR -ItemType Directory | Out-Null
-    Write-Verbose "Created directory $APP_DIR"
+
+if (Test-Path -LiteralPath $APP_DIR) {
+    Write-Verbose "Removing $APP_DIR"
+    Remove-Path -LiteralPath $APP_DIR
 }
+New-Item -Path $APP_DIR -ItemType Directory | Out-Null
+Write-Verbose "Created directory"
 
 if ($Version -eq "latest") {
     $release_url = "https://api.github.com/repos/Qwerty-133/spcache/releases/latest"
