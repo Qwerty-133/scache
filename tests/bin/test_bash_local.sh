@@ -37,7 +37,9 @@ print "${GREEN}" 'Test that installation fails on invalid versions\n'
 
 print "${GREEN}" 'Test installation of a specific version\n'
 "${INSTALL}" -s bash -v "1.0.0"
-bash --login -c 'spcache --version' | grep --silent "1.0.0"
+current_version="$(bash --login -c 'spcache --version')"
+echo "${current_version}"
+echo "${current_version}" | grep --silent -F "1.0.0" # fixed-strings
 
 print "${GREEN}" 'Test that the help flag works\n'
 "${INSTALL}" -h
