@@ -117,7 +117,7 @@ check_same_file_contents() {
 # Check that spcache is present in the PATH for login shells.
 test_spcache_in_path() {
   local -r shell="$1"
-  "${shell}" --login -c 'spcache --version' 1>/dev/null
+  "${shell}" --login -c 'spcache --version'
 }
 
 if [[ -n "${GITHUB_TOKEN:-}" ]]; then
