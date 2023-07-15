@@ -24,9 +24,47 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+
+function Remove-Path {
+    <#
+    .SYNOPSIS
+        Remove the file/directory present at the supplied path.
+    .PARAMETER Path
+        The path to remove.
+    .LINK
+        https://stackoverflow.com/a/9012108/14803382
+    #>
+    [
+        Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+            "PSUseShouldProcessForStateChangingFunctions", ""
+        )
+    ]
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$LiteralPath
+    )
+    try {
+        Get-ChildItem -LiteralPath $LiteralPath -Recurse | ForEach-Object {
+            Remove-Item -LiteralPath $_.FullName -Force -Recurse
+        }
+    } catch {
+        Write-Verbose "Get-ChildItem pipe failed."
+    }
+    try {
+        Remove-Item -LiteralPath $LiteralPath -Force -Recurse
+    } catch {
+        Write-Verbose "Remove-Item failed."
+    }
+    if (Test-Path -LiteralPath $LiteralPath) {
+        Write-Error "Failed to remove $LiteralPath"
+    }
+}
+
+
 $BASE_DIR = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
 $APP_DIR = "$BASE_DIR\spcache"
-if (-not (Test-Path -LiteralPath $APP_DIR)) {
+if (-not (Test-Path -LiteralPath $APP_DIR -PathType Container)) {
     Write-Warning "spcache is not currently installed."
     return
 }
@@ -62,21 +100,10 @@ if ($PersistentPath -contains $APP_DIR) {
     Write-Host "Removed $APP_DIR from PATH" -ForegroundColor Cyan
 }
 
-# From https://stackoverflow.com/a/9012108/14803382
 try {
-    Get-ChildItem -LiteralPath $APP_DIR -Recurse | ForEach-Object {
-        Remove-Item -LiteralPath $_.FullName -Force -Recurse
-    }
-} catch {
-    Write-Debug "Get-ChildItem pipe failed."
-}
-try {
-    Remove-Item -LiteralPath $APP_DIR -Force -Recurse
-} catch {
-    Write-Debug "Remove-Item failed."
-}
-if (Test-Path -LiteralPath $APP_DIR) {
-    Write-Error "Failed to delete $APP_DIR, please delete it manually."
-} else {
+    Remove-Path -LiteralPath $APP_DIR
     Write-Host "Successfully uninstalled spcache." -ForegroundColor Green
+}
+catch {
+    Write-Error "Failed to delete $APP_DIR, please delete it manually."
 }

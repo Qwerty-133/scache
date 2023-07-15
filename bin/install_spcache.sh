@@ -173,10 +173,16 @@ if [[ -n "${GITHUB_TOKEN:-}" ]]; then
 else
   readonly header=''
 fi
-if [[ ! -d "${APP_DIR}" ]]; then
-  mkdir -p "${APP_DIR}" # --parents
-  print_verbose "Created directory ${APP_DIR}\n"
+
+if [[ -f "${APP_DIR}" ]] || [[ -L "${APP_DIR}" ]]; then
+  print_verbose "Removing file present at path.\n"
+  rm "${APP_DIR}"
 fi
+if [[ -d "${APP_DIR}" ]]; then
+  print_verbose "Deleting existing directory.\n"
+  rm -rf "${APP_DIR}"
+fi
+mkdir -p "${APP_DIR}"
 if [[ "${version}" == 'latest' ]]; then
   readonly release_url='https://api.github.com/repos/Qwerty-133/spcache/releases/latest'
 else
