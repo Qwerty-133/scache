@@ -4,11 +4,11 @@
 set -euo pipefail
 
 RED="$(tput setaf 9 || printf '')"
-GREEN="$(tput setaf 10 || printf '')"
+MAGENTA="$(tput setaf 13 || printf '')"
 RESET="$(tput sgr0 || printf '')"
 readonly RED
 # shellcheck disable=SC2034
-readonly GREEN
+readonly MAGENTA
 readonly RESET
 # Print a message to STDOUT in the specified colour.
 print() {
@@ -117,11 +117,11 @@ check_same_file_contents() {
 # Check that spcache is present in the PATH for login shells.
 test_spcache_in_path() {
   local -r shell="$1"
-  "${shell}" --login -c 'spcache --version' 1>/dev/null
+  "${shell}" --login -c 'spcache --version'
 }
 
 if [[ -n "${GITHUB_TOKEN:-}" ]]; then
-  print "${GREEN}" 'Using GitHub token for authentication\n'
+  print "${MAGENTA}" 'Using GitHub token for authentication\n'
   readonly HEADER="Authorization: Bearer ${GITHUB_TOKEN}"
 else
   # shellcheck disable=SC2034
