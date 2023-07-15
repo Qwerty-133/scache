@@ -109,7 +109,7 @@ Installing a specific version of spcache:
 
 ```powershell
 $script = [scriptblock]::Create((iwr -useb "https://qwertie.pages.dev/install_spcache.ps1").Content)
-& $script -Version 1.0.0
+& $script -Version 1.0.1
 ```
 
 ### MacOS/Linux
@@ -117,7 +117,7 @@ $script = [scriptblock]::Create((iwr -useb "https://qwertie.pages.dev/install_sp
 Installing a specific version of spcache:
 
 ```bash
-curl -sSL https://qwertie.pages.dev/install_spcache.sh | bash -s - -v 1.0.0
+curl -sSL https://qwertie.pages.dev/install_spcache.sh | bash -s - -v 1.0.1
 ```
 
 ## Installing from PyPI
@@ -137,7 +137,7 @@ If you have Python 3.8+ installed, you can install spcache using pip:
     2. Run `python3 -m pip install spcache` to install spcache.
     3. Use `python3 -m spcache` if `spcache` doesn't work.
 
-To install a specific version of spcache, use `pip install spcache==1.0.0` instead.
+To install a specific version of spcache, use `pip install spcache==1.0.1` instead.
 
 ## Contributing
 
