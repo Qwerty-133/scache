@@ -24,7 +24,7 @@ jobs:
       - name: Setup the Python Environment
         uses: Qwerty-133/python-setup@v1
         with:
-          python-version: 3.11
+          python-version: '3.11'
 
       - name: Run pre-commit hooks
         run: poetry run pre-commit run --show-diff-on-failure --color=always --all-files

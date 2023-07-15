@@ -1,0 +1,37 @@
+name: Build, Test & Publish Executables
+
+on:
+  release:
+    types: [published]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    uses: ./.github/workflows/build_executables.yml
+    secrets: inherit
+    permissions:
+      contents: write
+
+  test-local:
+    uses: ./.github/workflows/test_local_scripts.yml
+    needs: build
+    secrets: inherit
+    permissions:
+      contents: read
+
+  test-online:
+    uses: ./.github/workflows/test_online_scripts.yml
+    needs: build
+    secrets: inherit
+    permissions:
+      contents: read
+
+  publish:
+    uses: ./.github/workflows/publish.yml
+    needs: test-local
+    secrets: inherit
+    permissions:
+      contents: read

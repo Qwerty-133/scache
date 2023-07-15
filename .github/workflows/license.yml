@@ -1,0 +1,136 @@
+name: Verify & Update Licenses
+# If running manually, this workflow does a dry run of the changes the PR
+# would contain.
+
+on:
+  push:
+    paths:
+      - 'LICENSE-THIRD-PARTY'
+      - 'poetry.lock'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  # Licenses compatible with the MIT License
+  ALLOWED_LICENSE: Apache Software License;
+    BSD License;
+    GNU Library or Lesser General Public License (LGPL);
+    ISC License (ISCL);
+    MIT License;
+    Mozilla Public License 2.0 (MPL 2.0);
+    Public Domain;
+    Python Software Foundation License;
+    The Unlicense (Unlicense)
+
+jobs:
+  verify-and-update:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup the Python Environment
+        uses: Qwerty-133/python-setup@v1
+        with:
+          python-version: '3.11'
+          skip-pre-commit: true
+
+      - name: Verify and generate third party licenses
+        id: license-info
+        run: |
+          dependencies="$(
+            poetry export -f requirements.txt --without-hashes |
+            sed 's/==.*//g' |
+            tr '\n' ' '
+          )"
+          echo "Found dependencies: ${dependencies}"
+
+          # Splitting of dependencies is intentional
+          json="$(
+            poetry run pip-licenses \
+            --allow-only "${ALLOWED_LICENSE}" \
+            --packages ${dependencies} \
+            --with-license-file \
+            --format json
+          )"
+          EOM="$(dd if=/dev/urandom bs=15 count=1 status=none | base64)"
+          echo "LICENSE_JSON<<${EOM}" >> "$GITHUB_ENV"
+          echo "${json}" >> "$GITHUB_ENV"
+          echo "${EOM}" >> "$GITHUB_ENV"
+
+      - name: Update third party licenses
+        shell: python {0}
+        run: |
+          import json
+          import os
+          license_info = json.loads(os.getenv("LICENSE_JSON"))
+
+          MAX_LINE_LEN = 79
+          DIV_RULE = "x" * MAX_LINE_LEN
+          RULE = "-" * MAX_LINE_LEN
+          SUB_RULE_CHAR = "-"
+
+          source_license_lines = []
+          with open("LICENSE-THIRD-PARTY") as f:
+            for line in f:
+              source_license_lines.append(line)
+
+              if line.strip() == "PACKAGE LICENSES":
+                source_license_lines.extend([DIV_RULE, "\n"])
+                break
+
+          with open("LICENSE-THIRD-PARTY", "w") as f:
+            f.writelines(source_license_lines)
+
+            for package in license_info:
+              print(file=f)
+              print(RULE, file=f)
+
+              heading = f"{package['Name']}-v{package['Version']} ({package['License']})"
+              print(heading.center(MAX_LINE_LEN).rstrip(), file=f)
+              print((SUB_RULE_CHAR * len(heading)).center(MAX_LINE_LEN).rstrip(), file=f)
+
+              license_text = package['LicenseText']
+              if license_text[-1] != "\n":
+                license_text += "\n"
+
+              print(package['LicenseText'], file=f, end="")
+
+      - name: Display changes
+        id: file-changed
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        run: |
+          if git diff --color-words --color-moved --color --exit-code; then
+            echo "No changes required."
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT;
+          fi
+
+      - name: Import GPG key
+        id: gpg-key
+        if: ${{ steps.file-changed.outputs.changed == 'true' }}
+        uses: crazy-max/ghaction-import-gpg@v5
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+
+      - name: Create pull request
+        if: ${{ steps.gpg-key.outcome != 'skipped' }}
+        uses: peter-evans/create-pull-request@v5
+        with:
+          title: Update third party licenses
+          commit-message: Update third party licenses
+          branch-suffix: timestamp
+          delete-branch: true
+          body:
+          committer: Qwerty-133 <74311372+Qwerty-133@users.noreply.github.com>

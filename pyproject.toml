@@ -44,6 +44,7 @@ ruff = "^0.0.272"
 black = "^23.3.0"
 isort = "^5.12.0"
 pyinstaller = "^5.12.0"
+pip-licenses = "^4.3.2"
 
 [tool.ruff]
 target-version = "py38"

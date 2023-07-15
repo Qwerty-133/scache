@@ -1,8 +1,11 @@
 name: Build Executables
+# Builds one-file and one-folder pyinstaller executables for all platforms.
+# When triggered by a release (workflow call), uploads the assets to the release.
+# When triggered manually: if a tag is specified, uploads the assets to release with the specified
+# tag. Otherwise, simply builds the executables and discards them.
 
 on:
-  release:
-    types: [published]
+  workflow_call:
   workflow_dispatch:
     inputs:
       tag:
@@ -37,10 +40,10 @@ jobs:
             asset: spcache_windows.zip
           - os: ubuntu-20.04
             mode: onedir
-            asset: spcache_linux.zip
+            asset: spcache_linux.tar.gz
           - os: macos-11
             mode: onedir
-            asset: spcache_macos.zip
+            asset: spcache_macos.tar.gz
 
           - os: windows-2019
             mode: onefile
@@ -89,7 +92,7 @@ jobs:
       - name: Setup the Python Environment
         uses: Qwerty-133/python-setup@v1
         with:
-          python-version: 3.11
+          python-version: '3.11'
           skip-pre-commit: true
           use-cache: false
 
@@ -99,14 +102,23 @@ jobs:
           if [[ '${{ matrix.mode }}' == 'onefile' ]]; then
             extra_options+=(--onefile)
           else
-            extra_options+=(--onedir)
+            if [[ '${{ matrix.os }}' == 'windows-2019' ]]; then
+              sep=';'
+            else
+              sep=':'
+            fi
+            extra_options+=(
+              --onedir
+              --add-data "LICENSE${sep}."
+              --add-data "LICENSE-THIRD-PARTY${sep}."
+            )
           fi
 
           poetry run pyinstaller spcache/__main__.py \
-          --name '${{ matrix.executable }}' \
-          --copy-metadata spcache \
-          --target-architecture universal2 \
-          "${extra_options[@]}"
+            --name '${{ matrix.executable }}' \
+            --copy-metadata spcache \
+            --target-architecture universal2 \
+            "${extra_options[@]}"
 
           if [[ '${{ matrix.mode }}' == 'onedir' ]]; then
             mv ./dist/spcache ./temp
@@ -125,8 +137,14 @@ jobs:
         run: |
           if [[ '${{ matrix.mode }}' == 'onefile' ]]; then
             mv './dist/${{ matrix.executable }}' './${{ matrix.asset }}'
+            exit 0
+          fi
+
+          if [[ '${{ matrix.os }}' == 'windows-2019' ]]; then
+              7z a './${{ matrix.asset }}' './dist/*'
           else
-            7z a './${{ matrix.asset }}' './dist/*'
+              # --create --gzip --verbose --file --directory
+              tar czvf './${{ matrix.asset }}' -C './dist' .
           fi
 
       - name: Upload release asset

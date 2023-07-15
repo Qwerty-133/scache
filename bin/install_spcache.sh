@@ -44,7 +44,7 @@ elif [[ "${os_name}" == 'Linux' ]]; then
   readonly PLATFORM='linux'
 else
   print "${YELLOW}"\
-  "Unrecognised platform: ${os_name}, the installed executable may not work\n" 1>&2
+    "Unrecognised platform: ${os_name}, the installed executable may not work\n" 1>&2
   readonly PLATFORM='linux'
 fi
 readonly PROG_NAME="$0"
@@ -189,12 +189,12 @@ version_tag="${release_data#*\"tag_name\": \"}"
 version_tag="${version_tag%%\"*}"
 print_verbose "Version tag: ${version_tag}\n"
 
-asset_url="https://github.com/Qwerty-133/spcache/releases/download/${version_tag}/spcache_${PLATFORM}.zip"
+asset_url="https://github.com/Qwerty-133/spcache/releases/download/${version_tag}/spcache_${PLATFORM}.tar.gz"
 print_verbose "Asset url: ${asset_url}\n"
 print "${CYAN}" "Downloading spcache ${version_tag} for ${PLATFORM}...\n"
 curl --fail --silent --location "${asset_url}" --output "${ZIP}" --header "${header}"
 print "${CYAN}" "Extracting spcache files...\n"
-unzip -o -q "${ZIP}" -d "${APP_DIR}" # overwrite, quiet, location
+tar -xf "${ZIP}" -C "${APP_DIR}" # --extract, --file, --directory
 rm "${ZIP}"
 chmod +x "${APP_DIR}/spcache" # Shouldn't be necessary, but just in case.
 

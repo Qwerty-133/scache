@@ -1,9 +1,8 @@
 name: Test Installation Scripts (Local)
+# Use the installation scripts present in the repository (./bin directory)
 
 on:
-  workflow_run:
-    workflows: [Publish Executables]
-    types: [completed]
+  workflow_call:
   workflow_dispatch:
 
 permissions:
