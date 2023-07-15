@@ -36,7 +36,7 @@ jobs:
       - name: Publish to PyPI
         run: >
           poetry publish
-            --build
-            --no-interaction
-            --username __token__
-            --password '${{ secrets.PYPI_TOKEN }}'
+          --build
+          --no-interaction
+          --username __token__
+          --password '${{ secrets.PYPI_TOKEN }}'
