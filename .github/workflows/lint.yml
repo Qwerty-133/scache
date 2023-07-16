@@ -13,8 +13,11 @@ defaults:
   run:
     shell: bash
 
+env:
+  PWSH_EXTS: '*.ps1 *.psd1 *.psm1'
+
 jobs:
-  lint:
+  lint-hooks:
     timeout-minutes: 10
     runs-on: ubuntu-latest
 
@@ -29,12 +32,44 @@ jobs:
       - name: Run pre-commit hooks
         run: poetry run pre-commit run --show-diff-on-failure --color=always --all-files
 
-      - name: Lint PowerShell files
+  lint-pwsh:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
         shell: pwsh
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install PSScriptAnalyzer
         run: |
           $analyzerModule = Get-Module -ListAvailable -Name PSScriptAnalyzer
           if ($null -eq $analyzerModule) {
             Install-Module -Name PSScriptAnalyzer -Force
           }
 
+      - name: Analyze PowerShell files
+        run: |
           Invoke-ScriptAnalyzer -Path '.\' -Recurse -EnableExit
+
+      - name: Format PowerShell files
+        run: |
+          $exts = (-split $env:PWSH_EXTS)
+          $files = Get-ChildItem -File -LiteralPath '.\' -Recurse -Force -Include $exts
+
+          $files | ForEach-Object {
+            $file = $_.FullName
+            $contents = Get-Content -LiteralPath $file -Raw
+            $formatted = Invoke-Formatter -ScriptDefinition $contents
+
+            if ($contents -ne $formatted) {
+              Set-Content -LiteralPath $file -Value $formatted
+            }
+          }
+
+      - name: Check for changes
+        shell: bash
+        run: >
+          git diff --color-words --color-moved --color --exit-code
