@@ -30,10 +30,11 @@ def handle_file(
 
         file = detect.detect_prefs_file()
         if file is None:
-            click.echo(
+            click.secho(
                 "The Spotify prefs file couldn't be auto-detected."
                 "\nPlease specify a path to the prefs file using the --file option.",
                 err=True,
+                fg="red",
             )
             ctx.exit(2)
 
@@ -47,9 +48,10 @@ def handle_file(
 
     filepath = pathlib.Path(file)
     if filepath.name != "prefs":
-        click.echo(
+        click.secho(
             f"The given file should be named 'prefs', not '{filepath.name}'. Is the path correct?",
             err=True,
+            fg="red",
         )
 
     return file
@@ -124,17 +126,20 @@ def set(
         import textwrap
 
         line_preview = textwrap.shorten(e.line_content.rstrip(), 80)
-        click.echo(
+        click.secho(
             f"Line {e.line_no} is invalid. ({line_preview})"
             "\nTo ignore this error, use the --force flag.",
             err=True,
+            fg="red",
         )
         ctx.exit(3)
 
     if previous_value is not None:
-        click.echo(f"The cache size has been updated from {previous_value} MB to {size} MB.")
+        click.secho(
+            f"The cache size has been updated from {previous_value} MB to {size} MB.", fg="green"
+        )
     else:
-        click.echo(f"The cache size has been set to {size} MB.")
+        click.secho(f"The cache size has been set to {size} MB.", fg="green")
 
 
 @spcache.command()
@@ -160,17 +165,20 @@ def get(
         import textwrap
 
         line_preview = textwrap.shorten(e.line_content.rstrip(), 80)
-        click.echo(
+        click.secho(
             f"Line {e.line_no} is invalid. ({line_preview})"
             "\nTo ignore this error, use the --force flag.",
             err=True,
+            fg="red",
         )
         ctx.exit(3)
 
     if limit is not None:
-        click.echo(f"The cache size is currently {limit} MB.")
+        click.secho(f"The cache size is currently {limit} MB.", fg="green")
     else:
-        click.echo("The cache size has not been set! Run 'spcache set' to set a limit.")
+        click.secho(
+            "The cache size has not been set! Run 'spcache set' to set a limit.", fg="yellow"
+        )
 
 
 @spcache.command()
@@ -181,10 +189,10 @@ def detect(ctx: click.Context) -> None:
 
     file = detect.detect_prefs_file()
     if file is None:
-        click.echo("The Spotify prefs file couldn't be auto-detected.", err=True)
+        click.secho("The Spotify prefs file couldn't be auto-detected.", err=True, fg="red")
         ctx.exit(2)
 
-    click.echo(file)
+    click.secho(file, fg="green")
 
 
 if __name__ == "__main__":
