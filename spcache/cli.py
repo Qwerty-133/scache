@@ -2,7 +2,7 @@
 
 import typing as t
 
-import click
+import rich_click as click
 
 # TODO: Inspect the behaviour of the Spotify client when the cache size
 # is set to 0.
@@ -12,6 +12,57 @@ CTX_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 if t.TYPE_CHECKING:
     import dotenv.main
+
+
+class ExceptionBase(click.ClickException):
+    """
+    Base class for exceptions raised by this CLI tool.
+
+    Supports reading the message from a class variable.
+    """
+
+    exit_code: t.ClassVar[int]
+    message: t.ClassVar[str]
+
+    def __init__(self) -> None:
+        super().__init__(self.message)
+
+
+class FileDetectionErrorWithFileOption(ExceptionBase):
+    """
+    Raised when the Spotify prefs file can't be auto-detected.
+
+    can provide --file option to specify the path to prefs file.
+    """
+
+    exit_code = 2
+    message = (
+        "The Spotify prefs file couldn't be auto-detected."
+        "\nPlease specify a path to the prefs file using the --file option."
+    )
+
+
+class FileDetectionError(ExceptionBase):
+    """Raised when the Spotify prefs file can't be auto-detected."""
+
+    exit_code = 2
+    message = "The Spotify prefs file couldn't be auto-detected."
+
+
+class EnvInvalidLineError(ExceptionBase):
+    """Raised when a line in a .env file is invalid."""
+
+    exit_code = 3
+    message = None
+
+    def __init__(self, e: tuple) -> None:
+        import textwrap
+
+        line_preview = textwrap.shorten(e.line_content.rstrip(), 80)
+        EnvInvalidLineError.message = (
+            f"Line {e.line_no} is invalid. ({line_preview})"
+            "\nTo ignore this error, use the --force flag."
+        )
 
 
 def handle_file(
@@ -30,13 +81,7 @@ def handle_file(
 
         file = detect.detect_prefs_file()
         if file is None:
-            click.secho(
-                "The Spotify prefs file couldn't be auto-detected."
-                "\nPlease specify a path to the prefs file using the --file option.",
-                err=True,
-                fg="red",
-            )
-            ctx.exit(2)
+            raise FileDetectionErrorWithFileOption
 
         if not no_prompts:
             click.confirm(
@@ -123,16 +168,7 @@ def set(
             file, CACHE_KEY, str(size), quote_mode="never", ignore_errors=force
         )
     except env.InvalidLineError as e:
-        import textwrap
-
-        line_preview = textwrap.shorten(e.line_content.rstrip(), 80)
-        click.secho(
-            f"Line {e.line_no} is invalid. ({line_preview})"
-            "\nTo ignore this error, use the --force flag.",
-            err=True,
-            fg="red",
-        )
-        ctx.exit(3)
+        raise EnvInvalidLineError(e) from None
 
     if previous_value is not None:
         click.secho(
@@ -162,16 +198,7 @@ def get(
     try:
         limit = env.get_key(file, CACHE_KEY, ignore_errors=force)
     except env.InvalidLineError as e:
-        import textwrap
-
-        line_preview = textwrap.shorten(e.line_content.rstrip(), 80)
-        click.secho(
-            f"Line {e.line_no} is invalid. ({line_preview})"
-            "\nTo ignore this error, use the --force flag.",
-            err=True,
-            fg="red",
-        )
-        ctx.exit(3)
+        raise EnvInvalidLineError(e) from None
 
     if limit is not None:
         click.secho(f"The cache size is currently {limit} MB.", fg="green")
@@ -189,8 +216,7 @@ def detect(ctx: click.Context) -> None:
 
     file = detect.detect_prefs_file()
     if file is None:
-        click.secho("The Spotify prefs file couldn't be auto-detected.", err=True, fg="red")
-        ctx.exit(2)
+        raise FileDetectionError
 
     click.secho(file, fg="green")
 
